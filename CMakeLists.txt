@@ -14,14 +14,9 @@ set(HEADER_FILES
 
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/ViscoelasticMaterial.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/MaxwellFirstOrder.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/MaxwellSecondOrder.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/KelvinVoigtFirstOrder.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/KelvinVoigtSecondOrder.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/SLSKelvinVoigtFirstOrder.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/SLSKelvinVoigtSecondOrder.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/SLSMaxwellFirstOrder.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/SLSMaxwellSecondOrder.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/Burgers.h
 )
 
 set(SOURCE_FILES
