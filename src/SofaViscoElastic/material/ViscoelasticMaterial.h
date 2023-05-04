@@ -51,7 +51,7 @@ to any discretization method like the finite element method.
 A material is generically described by a strain energy function and its first and second derivatives.
 */
 template<class DataTypes>
-class ViscoelasticMaterial
+class BaseViscoelasticMaterial
 {
 public:
 
@@ -59,25 +59,18 @@ public:
   typedef typename Coord::value_type Real;
   typedef type::MatSym<3,Real> MatrixSym;
   typedef type::Mat<3,3,Real> Matrix3;
- 
 
+  virtual ~BaseViscoelasticMaterial(){}
 
-   virtual ~ViscoelasticMaterial(){}
-
-  
-
-
+  void myCommonFunction(){
+      ///real content
+  };
 
   /** computes the second Piola Kirchhoff stress tensor of the current configuration */
-    virtual void deriveSPKTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,MatrixSym &, Real& )  {}
+   virtual void deriveSPKTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,MatrixSym &, Real& )  = 0;
 
   /** computes the Elasticity Tensor of the current configuration */
-
-    virtual void applyElasticityTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,const MatrixSym& , MatrixSym &, Real&)  {}
-
-
-
-
+   virtual void applyElasticityTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,const MatrixSym& , MatrixSym &, Real&)  = 0;
 };
 
 /** structure that store the parameters required to that are necessary to compute the strain energy

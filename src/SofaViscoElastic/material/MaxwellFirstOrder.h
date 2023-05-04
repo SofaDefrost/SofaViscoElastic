@@ -44,22 +44,17 @@ The material is described based on continuum mechanics.
 
 
 template<class DataTypes>
-class MaxwellFirstOrder : public ViscoelasticMaterial<DataTypes>{
+class MaxwellFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
 
-  typedef typename DataTypes::Coord::value_type Real;
-  typedef type::Mat<3,3,Real> Matrix3;
-  typedef type::MatSym<3,Real> MatrixSym;
+    typedef typename DataTypes::Coord::value_type Real;
+    typedef type::Mat<3,3,Real> Matrix3;
+    typedef type::MatSym<3,Real> MatrixSym;
 
-
-
-
-
-// 2) We discretize directly the equation with an Euler Scheme.
- 
+    /// We discretize directly the equation with an Euler Scheme.
     virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param, MatrixSym &SPKTensorGeneral, Real& dt){
 
-    Real E1=param.parameterArray[0];
-    Real tau=param.parameterArray[1];
+        Real E1=param.parameterArray[0];
+        Real tau=param.parameterArray[1];
 
 
         MatrixSym inversematrix;
@@ -69,11 +64,11 @@ class MaxwellFirstOrder : public ViscoelasticMaterial<DataTypes>{
         ID.identity();
 
 
-int k = 0, l = 0;
+        int k = 0, l = 0;
 
 
-// Calculation of Stress rate tensor according to Newmark    SPKdot(t+dt) = SPKdot(t) + 0.5*dt*(a(t+dt)+a(t)) Where a is the Stress acceleration   
-      for (k = 0; k < 3; ++k)
+        // Calculation of Stress rate tensor according to Newmark    SPKdot(t+dt) = SPKdot(t) + 0.5*dt*(a(t+dt)+a(t)) Where a is the Stress acceleration
+        for (k = 0; k < 3; ++k)
         {
             for (int l = 0; l < 3; ++l)
             {
@@ -82,8 +77,8 @@ int k = 0, l = 0;
         }
 
 
-// Calculation of Stress acceleration.
-      for (k = 0; k < 3; ++k)
+        // Calculation of Stress acceleration.
+        for (k = 0; k < 3; ++k)
         {
             for (l = 0; l < 3; ++l)
             {
@@ -92,13 +87,13 @@ int k = 0, l = 0;
         }
 
 
-//Differential Equation For Maxwell Model: SPK =  E1*tau*Edot - tau*SPKdot 
+        //Differential Equation For Maxwell Model: SPK =  E1*tau*Edot - tau*SPKdot
 
         SPKTensorGeneral = E1*tau*Edot -tau*sinfo->SPKdot;
 
-    // Store the value of Stress rate every time step
+        // Store the value of Stress rate every time step
 
-      for (k = 0; k < 3; ++k)
+        for (k = 0; k < 3; ++k)
         {
             for (l = 0; l < 3; ++l)
             {
@@ -107,9 +102,9 @@ int k = 0, l = 0;
         }
 
 
-    // Store the  value of the Stress Acceleration every Time step.
+        // Store the  value of the Stress Acceleration every Time step.
 
-      for (k = 0; k < 3; ++k)
+        for (k = 0; k < 3; ++k)
         {
             for (l = 0; l < 3; ++l)
             {
@@ -118,44 +113,44 @@ int k = 0, l = 0;
         }
 
 
-// Do the Multiplication C^-1 * SPK
+        // Do the Multiplication C^-1 * SPK
 
         SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(SPKTensorGeneral), SPKTensorGeneral);
- 
 
 
 
-  }
-  
-    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, Real& dt)  {
-		Real E1=param.parameterArray[0];
-		Real tau=param.parameterArray[1];
-		Real nu=param.parameterArray[2];
-		MatrixSym inversematrix;
-		invertMatrix(inversematrix,sinfo->C);
-		MatrixSym ID;
-		ID.identity();
 
-
-		Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-		+2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
-
-		MatrixSym Thirdmatrix;
-		Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
-    for(int k = 0; k<3; ++k){
-        for(int l=0; l<3; ++l){
-            if(sinfo->Edot(k,l) >= (1/tau)){
-              outputTensor = Thirdmatrix*(E1-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
-          }
-          else{
-
-          outputTensor = Thirdmatrix*(E1*exp(-dt/tau)-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
-
-        }  
-      }
     }
-    
-	}
+
+    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, Real& dt)  {
+        Real E1=param.parameterArray[0];
+        Real tau=param.parameterArray[1];
+        Real nu=param.parameterArray[2];
+        MatrixSym inversematrix;
+        invertMatrix(inversematrix,sinfo->C);
+        MatrixSym ID;
+        ID.identity();
+
+
+        Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
+                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
+
+        MatrixSym Thirdmatrix;
+        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
+        for(int k = 0; k<3; ++k){
+            for(int l=0; l<3; ++l){
+                if(sinfo->Edot(k,l) >= (1/tau)){
+                    outputTensor = Thirdmatrix*(E1-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
+                }
+                else{
+
+                    outputTensor = Thirdmatrix*(E1*exp(-dt/tau)-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
+
+                }
+            }
+        }
+
+    }
 
 };
 

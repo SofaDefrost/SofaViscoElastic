@@ -41,19 +41,17 @@ to any discretization method like the finite element method.
 
 **/  
 
-
-
 template<class DataTypes>
-class SLSKelvinVoigtFirstOrder : public ViscoelasticMaterial<DataTypes>{
+class SLSKelvinVoigtFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
+    typedef typename DataTypes::Coord::value_type Real;
+    typedef type::Mat<3,3,Real> Matrix3;
+    typedef type::Mat<6,6,Real> Matrix6;
+    typedef type::MatSym<3,Real> MatrixSym;
 
-  typedef typename DataTypes::Coord::value_type Real;
-  typedef type::Mat<3,3,Real> Matrix3;
-  typedef type::Mat<6,6,Real> Matrix6;
-  typedef type::MatSym<3,Real> MatrixSym;
- 
- 
 
-	virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, SReal& t){
+    //Comment(dmarchal): dt should be SReal as it is sofa defined...
+    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, Real& dt) override
+    {
 
         Real E0=param.parameterArray[0];
         Real E1=param.parameterArray[1];
@@ -64,20 +62,14 @@ class SLSKelvinVoigtFirstOrder : public ViscoelasticMaterial<DataTypes>{
         MatrixSym E = sinfo->E;
         MatrixSym Edot = sinfo->Edot;
 
-
         ID.identity();
 
+        // 2) In this code we will apply the Newmark scheme integration to discretize the differential equations of the Linear ViscoElastic Materials.
+        // In particular the Newmark Scheme is applied to the Stress rate tensor calculation.
+        int k = 0, l = 0;
 
-
-// 2) In this code we will apply the Newmark scheme integration to discretize the differential equations of the Linear ViscoElastic Materials.
-// In particular the Newmark Scheme is applied to the Stress rate tensor calculation.
-
-
-int k = 0, l = 0;
-
-
-// Calculation of Stress rate tensor according to Newmark    SPKdot(t+dt) = SPKdot(t) + 0.5*dt*(a(t+dt)+a(t)) Where a is the Stress acceleration   
-      for (k = 0; k < 3; ++k)
+        // Calculation of Stress rate tensor according to Newmark    SPKdot(t+dt) = SPKdot(t) + 0.5*dt*(a(t+dt)+a(t)) Where a is the Stress acceleration
+        for (k = 0; k < 3; ++k)
         {
             for (int l = 0; l < 3; ++l)
             {
@@ -86,24 +78,24 @@ int k = 0, l = 0;
         }
 
 
-// Calculation of Stress acceleration.
-      for (k = 0; k < 3; ++k)
+        // Calculation of Stress acceleration.
+        for (k = 0; k < 3; ++k)
         {
             for (l = 0; l < 3; ++l)
             {
                 sinfo->acc_SPK(k,l) = (sinfo->SPKdot(k,l)-sinfo->SPKdotprev(k,l))/dt;
             }
         }
-    
- // Differential equation: SPK = E0 * E + (E0+E1)* tau * Edot - tau * SPKdot
 
-  Real beta = 1+(E0/E1); 
+        // Differential equation: SPK = E0 * E + (E0+E1)* tau * Edot - tau * SPKdot
 
-    SPKTensorGeneral = (1/beta)*(E0*E+E0*tau*Edot-tau*sinfo->SPKdot);
+        Real beta = 1+(E0/E1);
 
-    // Store the value of Stress rate every time step
+        SPKTensorGeneral = (1/beta)*(E0*E+E0*tau*Edot-tau*sinfo->SPKdot);
 
-      for (k = 0; k < 3; ++k)
+        // Store the value of Stress rate every time step
+
+        for (k = 0; k < 3; ++k)
         {
             for (l = 0; l < 3; ++l)
             {
@@ -114,9 +106,9 @@ int k = 0, l = 0;
 
 
 
-    // Store the  value of the Stress Acceleration every Time step.
+        // Store the  value of the Stress Acceleration every Time step.
 
-      for (k = 0; k < 3; ++k)
+        for (k = 0; k < 3; ++k)
         {
             for (l = 0; l < 3; ++l)
             {
@@ -124,16 +116,16 @@ int k = 0, l = 0;
             }
         }
 
-    // Do the Multiplication C^-1 * SPK
+        // Do the Multiplication C^-1 * SPK
 
         SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(SPKTensorGeneral), SPKTensorGeneral);
- 
-	}
-	
-	
 
-    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t)  {
+    }
 
+
+
+    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, Real& dt)
+    {
         Real E0=param.parameterArray[0];
         Real E1=param.parameterArray[1];
         Real tau=param.parameterArray[2];
@@ -145,25 +137,25 @@ int k = 0, l = 0;
 
 
         Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-        +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
+                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
 
         MatrixSym Thirdmatrix;
-        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);    
-    for(int k = 0; k<3; ++k){
-        for(int l=0; l<3; ++l){
-            if(sinfo->Edot(k,l) >= (1/tau)){
+        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
+        for(int k = 0; k<3; ++k){
+            for(int l=0; l<3; ++l){
+                if(sinfo->Edot(k,l) >= (1/tau)){
                     Real alpha = E0+E1;
 
-                    outputTensor = Thirdmatrix*(0.5*alpha-((E0+E1)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E0+E1)/(3*(1-2*nu)))*trHC*0.5; 
-            }
-            else{
+                    outputTensor = Thirdmatrix*(0.5*alpha-((E0+E1)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E0+E1)/(3*(1-2*nu)))*trHC*0.5;
+                }
+                else{
                     Real alpha = E0+E1/(1-exp(-dt/tau));
 
-                    outputTensor = Thirdmatrix*(0.5*alpha-((E0+E1)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E0+E1)/(3*(1-2*nu)))*trHC*0.5;                
-            }   
-        }        
+                    outputTensor = Thirdmatrix*(0.5*alpha-((E0+E1)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E0+E1)/(3*(1-2*nu)))*trHC*0.5;
+                }
+            }
+        }
     }
-
 };
 
 

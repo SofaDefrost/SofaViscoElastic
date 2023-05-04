@@ -83,7 +83,6 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.Constraint.Lagrangian.Correction")
 	rootNode.addObject("RequiredPlugin", name = "Sofa.Component.Constraint.Projective")
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
-	rootNode.addObject("RequiredPlugin", name="Sofa.Component.SolidMechanics.FEM.ViscoElastic")
 
 
 	rootNode.gravity=[0,0,-9.81]
