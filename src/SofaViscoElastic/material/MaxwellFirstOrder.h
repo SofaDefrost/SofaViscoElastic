@@ -1,7 +1,19 @@
 /******************************************************************************
-*                 SOFA, Simulation Open-Framework Architecture                *
-*                    (c) 2006 INRIA, USTL, UJF, CNRS, MGH                     *
+*  THE SOFA VISCOELASTIC PLUGIN.                                              *
+*                                                                             * 
+* DESCRIPTION:                                                                *
+* This plugin is made for the Simulation Open-Framework Architecture (SOFA)   *
+* (c) 2006 INRIA, USTL, UJF, CNRS, MGH.                                       *
+* The plugin consist in a Visco-Elastic force field for tetrahedral meshes.   * 
+* Several rheological models are implemented.                                 *
 *                                                                             *
+* CONTRIBUTORS:                                                               *         
+* The plugin is made by the collaboration beween the Robotics and Multibody   * 
+* Mechanics Department (R&MM) Vrije Universiteit Brussel (VUB), Bruxelles     *
+* Belgium, and the DEFROST Team of the INRIA - Lille, France.                 *
+*                                                                             *
+*                                                                             *
+* LICENSE:                                                                    *
 * This program is free software; you can redistribute it and/or modify it     *
 * under the terms of the GNU Lesser General Public License as published by    *
 * the Free Software Foundation; either version 2.1 of the License, or (at     *
@@ -15,9 +27,9 @@
 * You should have received a copy of the GNU Lesser General Public License    *
 * along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
-* Authors: Pasquale Ferrentino The SOFA Team(see Authors.txt)                 *
+* Author: Pasquale Ferrentino                                                 *
 *                                                                             *
-* Contact information: contact@sofa-framework.org & pasquale.ferrentino@vub.be*
+* Contact information: pasquale.ferrentino@vub.be                             *
 ******************************************************************************/
 #pragma once
 
@@ -26,7 +38,6 @@
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/TopologyData.inl>
-#include "ViscoelasticMaterial.h"
 #include <sofa/type/Vec.h>
 #include <sofa/type/Mat.h>
 #include <string>
@@ -36,126 +47,93 @@
 namespace sofa::SofaViscoElastic::material
 {
 
-/** a Class that describe a generic Viscoelastic material : example of Maxwell First Order
-The material is described based on continuum mechanics.
+/* a Class that describe a generic Viscoelastic material : example of  Maxwell First Order.
+The material is described based on continuum mechanics and the description is independent
+to any discretization method like the finite element method.
 
-**/  
+For the explanation of the algorithm, the user can see the documentation on this two links:
+
+FEniCS : https://comet-fenics.readthedocs.io/en/latest/demo/viscoelasticity/linear_viscoelasticity.html
+
+COMSOL: https://doc.comsol.com/5.5/doc/com.comsol.help.sme/sme_ug_theory.06.26.html 
+
+*/  
+
+  
 
 
 
 template<class DataTypes>
-class MaxwellFirstOrder : public ViscoelasticMaterial<DataTypes>{
+class MaxwellFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
 
-  typedef typename DataTypes::Coord::value_type Real;
-  typedef type::Mat<3,3,Real> Matrix3;
-  typedef type::MatSym<3,Real> MatrixSym;
+    typedef typename DataTypes::Coord::value_type Real;
+    typedef type::Mat<3,3,Real> Matrix3;
+    typedef type::MatSym<3,Real> MatrixSym;
 
+    virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param, MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
+    {
 
-
-
-
-// 2) We discretize directly the equation with an Euler Scheme.
- 
-    virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param, MatrixSym &SPKTensorGeneral, Real& dt){
-
-    Real E1=param.parameterArray[0];
-    Real tau=param.parameterArray[1];
+        Real E1=param.parameterArray[0];
+        Real tau=param.parameterArray[1];
 
 
         MatrixSym inversematrix;
         invertMatrix(inversematrix,sinfo->C);
-        MatrixSym Edot = sinfo-> Edot;
+        MatrixSym ID;
+        ID.identity();
+        
+
+        /// The algorithm consist into define for any model the strain that is acting on each dashpot present in the model, called Eviscous (Evisc in the code)
+
+        sinfo->Evisc1 = (1/(1+(dt/tau)))*(sinfo->Evisc_prev1+ (dt/tau)*sinfo->E);
+        
+        // Calculation Viscous strain rate
+        sinfo-> Evdot1 = (sinfo->Evisc1 - sinfo->Evisc_prev1)/dt;
+
+        /// The equation of the Cauchy Stress tensor for the Maxwell Model.
+        CauchyStressTensor = ((E1/(1+(dt/tau))))*sinfo->E - (E1/(1+(dt/tau)))*sinfo->Evisc_prev1;
+
+        /// Store the viscous strain every time step.
+        sinfo->Evisc_prev1 = sinfo->Evisc1;
+       
+
+
+        /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
+        SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
+    }
+
+    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
+      {
+        Real E1=param.parameterArray[0];
+        Real tau=param.parameterArray[1];
+        Real nu=param.parameterArray[2];
+        MatrixSym inversematrix;
+        invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
 
 
-int k = 0, l = 0;
+        Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
+                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
 
 
-// Calculation of Stress rate tensor according to Newmark    SPKdot(t+dt) = SPKdot(t) + 0.5*dt*(a(t+dt)+a(t)) Where a is the Stress acceleration   
-      for (k = 0; k < 3; ++k)
-        {
-            for (int l = 0; l < 3; ++l)
-            {
-                sinfo->SPKdot(k,l) = sinfo->SPKdotprev(k,l) + 0.5*dt*(sinfo->acc_SPK(k,l)+sinfo->prevacc_SPK(k,l));
+
+        MatrixSym Thirdmatrix;
+        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
+        for(int k = 0; k<3; ++k){
+            for(int l=0; l<3; ++l){
+                if(sinfo->Evdot1(k,l) >= (1/tau)){
+                    outputTensor = Thirdmatrix*(E1-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
+                }
+                else{
+
+                    outputTensor = Thirdmatrix*(E1*exp(-t/tau)-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
+
+                }
             }
         }
 
-
-// Calculation of Stress acceleration.
-      for (k = 0; k < 3; ++k)
-        {
-            for (l = 0; l < 3; ++l)
-            {
-                sinfo->acc_SPK(k,l) = (sinfo->SPKdot(k,l)-sinfo->SPKdotprev(k,l))/dt;
-            }
-        }
-
-
-//Differential Equation For Maxwell Model: SPK =  E1*tau*Edot - tau*SPKdot 
-
-        SPKTensorGeneral = E1*tau*Edot -tau*sinfo->SPKdot;
-
-    // Store the value of Stress rate every time step
-
-      for (k = 0; k < 3; ++k)
-        {
-            for (l = 0; l < 3; ++l)
-            {
-                sinfo->SPKdotprev(k,l) = sinfo->SPKdot(k,l);
-            }
-        }
-
-
-    // Store the  value of the Stress Acceleration every Time step.
-
-      for (k = 0; k < 3; ++k)
-        {
-            for (l = 0; l < 3; ++l)
-            {
-                sinfo->prevacc_SPK(k,l) = sinfo->acc_SPK(k,l);
-            }
-        }
-
-
-// Do the Multiplication C^-1 * SPK
-
-        SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(SPKTensorGeneral), SPKTensorGeneral);
- 
-
-
-
-  }
-  
-    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, Real& dt)  {
-		Real E1=param.parameterArray[0];
-		Real tau=param.parameterArray[1];
-		Real nu=param.parameterArray[2];
-		MatrixSym inversematrix;
-		invertMatrix(inversematrix,sinfo->C);
-		MatrixSym ID;
-		ID.identity();
-
-
-		Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-		+2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
-
-		MatrixSym Thirdmatrix;
-		Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
-    for(int k = 0; k<3; ++k){
-        for(int l=0; l<3; ++l){
-            if(sinfo->Edot(k,l) >= (1/tau)){
-              outputTensor = Thirdmatrix*(E1-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
-          }
-          else{
-
-          outputTensor = Thirdmatrix*(E1*exp(-dt/tau)-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
-
-        }  
-      }
     }
-    
-	}
 
 };
 

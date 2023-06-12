@@ -1,7 +1,19 @@
 ﻿/******************************************************************************
-*                 SOFA, Simulation Open-Framework Architecture                *
-*                    (c) 2006 INRIA, USTL, UJF, CNRS, MGH                     *
+*  THE SOFA VISCOELASTIC PLUGIN.                                              *
+*                                                                             * 
+* DESCRIPTION:                                                                *
+* This plugin is made for the Simulation Open-Framework Architecture (SOFA)   *
+* (c) 2006 INRIA, USTL, UJF, CNRS, MGH.                                       *
+* The plugin consist in a Visco-Elastic force field for tetrahedral meshes.   * 
+* Several rheological models are implemented.                                 *
 *                                                                             *
+* CONTRIBUTORS:                                                               *         
+* The plugin is made by the collaboration beween the Robotics and Multibody   * 
+* Mechanics Department (R&MM) Vrije Universiteit Brussel (VUB), Bruxelles     *
+* Belgium, and the DEFROST Team of the INRIA - Lille, France.                 *
+*                                                                             *
+*                                                                             *
+* LICENSE:                                                                    *
 * This program is free software; you can redistribute it and/or modify it     *
 * under the terms of the GNU Lesser General Public License as published by    *
 * the Free Software Foundation; either version 2.1 of the License, or (at     *
@@ -15,11 +27,10 @@
 * You should have received a copy of the GNU Lesser General Public License    *
 * along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
-* Authors: Pasquale Ferrentino The SOFA Team(see Authors.txt)                 *
+* Author: Pasquale Ferrentino                                                 *
 *                                                                             *
-* Contact information: contact@sofa-framework.org & pasquale.ferrentino@vub.be*
+* Contact information: pasquale.ferrentino@vub.be                             *
 ******************************************************************************/
-#pragma once
 #include <sofa/core/visual/VisualParams.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
@@ -98,24 +109,12 @@ void drawViscoelasticTets(const core::visual::VisualParams* vparams, const VecCo
         color3 = sofa::type::RGBAColor(0.0,1.0,1.0,1.0);
         color4 = sofa::type::RGBAColor(0.5,1.0,1.0,1.0);
     }
-    /*else if (materialName=="VerondaWestman"){
+    else if (materialName=="Burgers"){
         color1 = sofa::type::RGBAColor(0.0,1.0,0.0,1.0);
         color2 = sofa::type::RGBAColor(0.5,1.0,0.0,1.0);
         color3 = sofa::type::RGBAColor(1.0,1.0,0.0,1.0);
         color4 = sofa::type::RGBAColor(1.0,1.0,0.5,1.0);
     }
-    else if (materialName=="Costa"){
-        color1 = sofa::type::RGBAColor(0.0,1.0,0.0,1.0);
-        color2 = sofa::type::RGBAColor(0.5,1.0,0.0,1.0);
-        color3 = sofa::type::RGBAColor(1.0,1.0,0.0,1.0);
-        color4 = sofa::type::RGBAColor(1.0,1.0,0.5,1.0);
-    }
-    else if (materialName=="Ogden"){
-        color1 = sofa::type::RGBAColor(0.0,1.0,0.0,1.0);
-        color2 = sofa::type::RGBAColor(0.5,1.0,0.0,1.0);
-        color3 = sofa::type::RGBAColor(1.0,1.0,0.0,1.0);
-        color4 = sofa::type::RGBAColor(1.0,1.0,0.5,1.0);
-    }*/
     else {
         color1 = sofa::type::RGBAColor(0.0,1.0,0.0,1.0);
         color2 = sofa::type::RGBAColor(0.5,1.0,0.0,1.0);

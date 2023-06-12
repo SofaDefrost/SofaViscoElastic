@@ -1,7 +1,19 @@
 /******************************************************************************
-*                              SofaPython3 plugin                             *
-*                  (c) 2021 CNRS, University of Lille, INRIA                  *
+*  THE SOFA VISCOELASTIC PLUGIN.                                              *
+*                                                                             * 
+* DESCRIPTION:                                                                *
+* This plugin is made for the Simulation Open-Framework Architecture (SOFA)   *
+* (c) 2006 INRIA, USTL, UJF, CNRS, MGH.                                       *
+* The plugin consist in a Visco-Elastic force field for tetrahedral meshes.   * 
+* Several rheological models are implemented.                                 *
 *                                                                             *
+* CONTRIBUTORS:                                                               *         
+* The plugin is made by the collaboration beween the Robotics and Multibody   * 
+* Mechanics Department (R&MM) Vrije Universiteit Brussel (VUB), Bruxelles     *
+* Belgium, and the DEFROST Team of the INRIA - Lille, France.                 *
+*                                                                             *
+*                                                                             *
+* LICENSE:                                                                    *
 * This program is free software; you can redistribute it and/or modify it     *
 * under the terms of the GNU Lesser General Public License as published by    *
 * the Free Software Foundation; either version 2.1 of the License, or (at     *
@@ -15,7 +27,9 @@
 * You should have received a copy of the GNU Lesser General Public License    *
 * along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
-* Contact information: contact@sofa-framework.org                             *
+* Author: Pasquale Ferrentino                                                 *
+*                                                                             *
+* Contact information: pasquale.ferrentino@vub.be                             *
 ******************************************************************************/
 
 #pragma once

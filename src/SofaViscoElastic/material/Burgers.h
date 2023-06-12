@@ -46,7 +46,8 @@
 namespace sofa::SofaViscoElastic::material
 {
 
-/* a Class that describe a generic Viscoelastic material : example of  Kelvin-Voigt First Order.
+
+/* a Class that describe a generic Viscoelastic material : example of Burgers.
 The material is described based on continuum mechanics and the description is independent
 to any discretization method like the finite element method.
 
@@ -59,72 +60,100 @@ COMSOL: https://doc.comsol.com/5.5/doc/com.comsol.help.sme/sme_ug_theory.06.26.h
 */  
 
 
-
 template<class DataTypes>
-class KelvinVoigtFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
+class Burgers : public BaseViscoelasticMaterial<DataTypes>{
 
-    typedef typename DataTypes::Coord::value_type Real;
-    typedef type::Mat<3,3,Real> Matrix3;
-    typedef type::MatSym<3,Real> MatrixSym;
+  typedef typename DataTypes::Coord::value_type Real;
+  typedef type::Mat<3,3,Real> Matrix3;
+  typedef type::Mat<6,6,Real> Matrix6;
+  typedef type::MatSym<3,Real> MatrixSym;
+ 
+ 
 
-    virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
+	virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
     {
-        Real E1=param.parameterArray[0];
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
-        MatrixSym ID;
+		Real E1 = param.parameterArray[0];
+		Real tau1 = param.parameterArray[1];
+		Real E2 = param.parameterArray[2];
+		Real tau2 = param.parameterArray[3];
+		MatrixSym inversematrix;
+		invertMatrix(inversematrix,sinfo->C);
+		MatrixSym ID;
+		ID.identity();
 
-        ID.identity();
 
-        /// Calculation Viscous strain
+        // Calculation Viscous strain rate
+        sinfo->Evisc1 = (1/(1+(dt/tau1)))*(sinfo->Evisc_prev1 + (dt/tau1)*(sinfo->E-sinfo->Evisc_prev2));
 
-        sinfo-> Evisc1 = sinfo->E;
-        /// Calculation Viscous strain rate
+        sinfo->Evisc2 = (1/(1+(dt/tau2)))*(sinfo->Evisc_prev2 + ((E1*tau1)/(E2*tau2))*(sinfo->Evisc1-sinfo->Evisc_prev1));
 
-        sinfo-> Evdot1 = (sinfo->Evisc1 - sinfo->Evisc_prev1)/dt;
 
-        /// The equation of the Cauchy Stress tensor for the Kelvin Voigt Model.
-        CauchyStressTensor = E1*sinfo->Evisc1;
         
+        // Calculation Viscous strain rate
+        sinfo-> Evdot1 = (sinfo->Evisc1 - sinfo->Evisc_prev1)/dt;
+        sinfo-> Evdot2 = (sinfo->Evisc2 - sinfo->Evisc_prev2)/dt;
+
+        /// The equation of the Cauchy-Green Stress tensor for the Maxwell Model.
+        CauchyStressTensor = ((E1*E2)/(E1+E2))*(sinfo->Evisc2);
+
         /// Store the viscous strain every time step.
+        sinfo->Evisc_prev2 = sinfo->Evisc2;
         sinfo->Evisc_prev1 = sinfo->Evisc1;
-              
+       
+
         /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
         SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
-    }
 
-    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
-     {
-        Real E1=param.parameterArray[0];
-        Real tau=param.parameterArray[1];
-        Real nu=param.parameterArray[2];
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
-        MatrixSym ID;
-        ID.identity();
+	
+	}
 
-        Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
+    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& dt) override  {
+		Real E1=param.parameterArray[0];
+		Real tau1=param.parameterArray[1];
+		Real E2=param.parameterArray[2];
+		Real tau2=param.parameterArray[3];
+		Real nu=param.parameterArray[4];
+
+		MatrixSym inversematrix;
+		invertMatrix(inversematrix,sinfo->C);
+		MatrixSym ID;
+		ID.identity();
 
 
+		Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
+		+2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
 
-        MatrixSym Thirdmatrix;
+		MatrixSym Thirdmatrix;
+		Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
 
-        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
         for(int k = 0; k<3; ++k){
             for(int l=0; l<3; ++l){
-                if(sinfo->Evdot1(k,l) >= (1/tau)){
-                    Real alpha = E1;
-                    outputTensor = Thirdmatrix*(0.5*alpha-E1/(3*(1-2*nu))*log(sinfo->J)*0.5)+ inversematrix*(E1/(3*(1-2*nu)))*trHC*0.5;
+                if(sinfo->Evdot1(k,l) >= (1/tau1) && sinfo->Evdot2(k,l) >= (1/tau2) ){
+                    Real alpha = E1+E2;
+
+                    outputTensor = Thirdmatrix*(0.5*alpha-((E1+E2)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E1+E2)/(3*(1-2*nu)))*trHC*0.5;
+                }
+                else if(sinfo->Evdot1(k,l) >= (1/tau1) && sinfo->Evdot2(k,l)< (1/tau2)){
+                    Real alpha = E1+E2/(1-exp(-dt/tau2));
+
+                    outputTensor = Thirdmatrix*(0.5*alpha-((E1+E2)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E1+E2)/(3*(1-2*nu)))*trHC*0.5;                	
+                }
+                else if(sinfo->Evdot2(k,l) >= (1/tau2) && sinfo->Evdot1(k,l)< (1/tau1)){
+                    Real alpha = E1*exp(-dt/tau1)+E2;
+
+                    outputTensor = Thirdmatrix*(0.5*alpha-((E1+E2)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E1+E2)/(3*(1-2*nu)))*trHC*0.5;                	
                 }
                 else{
-                    Real alpha = E1/(1-exp(-t/tau));
-                    outputTensor = Thirdmatrix*(0.5*alpha-E1/(3*(1-2*nu))*log(sinfo->J)*0.5)+ inversematrix*(E1/(3*(1-2*nu)))*trHC*0.5;
+                    Real alpha = E1*exp(-dt/tau1)+E2/(1-exp(-dt/tau2));
+
+                    outputTensor = Thirdmatrix*(0.5*alpha-((E1+E2)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E1+E2)/(3*(1-2*nu)))*trHC*0.5;
                 }
             }
         }
-    }
+
+}
+
 };
 
 
-} // namespace
+} // namespace sofa::component::solidmechanics::fem::hyperelastic::material

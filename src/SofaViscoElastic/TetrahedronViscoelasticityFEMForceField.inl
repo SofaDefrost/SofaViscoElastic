@@ -1,7 +1,19 @@
 /******************************************************************************
-*                 SOFA, Simulation Open-Framework Architecture                *
-*                    (c) 2006 INRIA, USTL, UJF, CNRS, MGH                     *
+*  THE SOFA VISCOELASTIC PLUGIN.                                              *
+*                                                                             * 
+* DESCRIPTION:                                                                *
+* This plugin is made for the Simulation Open-Framework Architecture (SOFA)   *
+* (c) 2006 INRIA, USTL, UJF, CNRS, MGH.                                       *
+* The plugin consist in a Visco-Elastic force field for tetrahedral meshes.   * 
+* Several rheological models are implemented.                                 *
 *                                                                             *
+* CONTRIBUTORS:                                                               *         
+* The plugin is made by the collaboration beween the Robotics and Multibody   * 
+* Mechanics Department (R&MM) Vrije Universiteit Brussel (VUB), Bruxelles     *
+* Belgium, and the DEFROST Team of the INRIA - Lille, France.                 *
+*                                                                             *
+*                                                                             *
+* LICENSE:                                                                    *
 * This program is free software; you can redistribute it and/or modify it     *
 * under the terms of the GNU Lesser General Public License as published by    *
 * the Free Software Foundation; either version 2.1 of the License, or (at     *
@@ -15,11 +27,10 @@
 * You should have received a copy of the GNU Lesser General Public License    *
 * along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
-* Authors: The SOFA Team and external contributors (see Authors.txt)          *
+* Author: Pasquale Ferrentino                                                 *
 *                                                                             *
-* Contact information: contact@sofa-framework.org                             *
+* Contact information: pasquale.ferrentino@vub.be                             *
 ******************************************************************************/
-#pragma once
 
 #include <SofaViscoElastic/TetrahedronViscoelasticityFEMForceField.h>
 #include <SofaViscoElastic/TetrahedronViscoelasticityFEMDrawing.h>
@@ -27,6 +38,11 @@
 #include <SofaViscoElastic/material/MaxwellFirstOrder.h>
 #include <SofaViscoElastic/material/SLSMaxwellFirstOrder.h>
 #include <SofaViscoElastic/material/KelvinVoigtFirstOrder.h>
+#include <SofaViscoElastic/material/SLSKelvinVoigtFirstOrder.h>
+#include <SofaViscoElastic/material/Burgers.h>
+
+
+
 
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/core/behavior/ForceField.inl>
@@ -39,7 +55,6 @@ using namespace sofa::defaulttype;
 using namespace core::topology;
 using namespace sofa::SofaViscoElastic::material;
 
-
 template <class DataTypes> TetrahedronViscoelasticityFEMForceField<DataTypes>::TetrahedronViscoelasticityFEMForceField()
     : m_topology(nullptr)
     , m_initialPoints(0)
@@ -50,13 +65,15 @@ template <class DataTypes> TetrahedronViscoelasticityFEMForceField<DataTypes>::T
     , d_anisotropySet(initData(&d_anisotropySet,"AnisotropyDirections","The global directions of anisotropy of the material"))
     , m_tetrahedronInfo(initData(&m_tetrahedronInfo, "tetrahedronInfo", "Internal tetrahedron data"))
     , m_edgeInfo(initData(&m_edgeInfo, "edgeInfo", "Internal edge data"))
+    , d_stressSPK(initData(&d_stressSPK, "stressSPK","The stress of the Second Piola Kirchhoff Stress Tensor per Element"))   
+    , d_Cauchystress(initData(&d_Cauchystress, "CauchyStress","The stress of the Cauchy Stress Tensor per Element"))
+    , d_stressVonMisesElement(initData(&d_stressVonMisesElement, "stressVonMisesElement","The stress of the Von Mises Stress per Element"))
     , l_topology(initLink("topology", "link to the topology container"))
 {
-    this->d_componentState.setValue(sofa::core::objectmodel::ComponentState::Loading);
 }
 
 template <class DataTypes> TetrahedronViscoelasticityFEMForceField<DataTypes>::~TetrahedronViscoelasticityFEMForceField()
-= default;
+    = default;
 
 template <class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::instantiateMaterial()
@@ -76,12 +93,23 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::instantiateMaterial()
     else if (material == "KelvinVoigtFirstOrder")
     {        
 
-        m_myMaterial = std::make_unique<SLSMaxwellFirstOrder<DataTypes>>();
-    }   
+        m_myMaterial = std::make_unique<KelvinVoigtFirstOrder<DataTypes>>();
+    } 
+    else if (material == "SLSKelvinVoigtFirstOrder")
+    {        
+
+        m_myMaterial = std::make_unique<SLSKelvinVoigtFirstOrder<DataTypes>>();
+    } 
+    else if (material == "Burgers")
+    {        
+
+        m_myMaterial = std::make_unique<Burgers<DataTypes>>();
+    }
+                 
     else
     {
         msg_error() << "material name " << material <<
-            " is not valid (should be MaxwellFirstOrder, SLSMaxwellFirstOrder, KelvinVoigtFirstOrder)";
+            " is not valid (should be MaxwellFirstOrder, SLSMaxwellFirstOrder, KelvinVoigtFirstOrder, SLSKelvinVoigtFirstOrder, Burgers)";
     }
 
     if (m_myMaterial)
@@ -92,27 +120,28 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::instantiateMaterial()
 
 template <class DataTypes> void TetrahedronViscoelasticityFEMForceField<DataTypes>::init()
 {
-    using namespace material;
     msg_info() << "initializing TetrahedronViscoelasticityFEMForceField";
 
     this->Inherited::init();
 
-    /** parse the parameter set */
+    /// parse the parameter set 
     const SetParameterArray& paramSet = d_parameterSet.getValue();
     if (!paramSet.empty())
     {
         globalParameters.parameterArray.resize(paramSet.size());
         std::copy(paramSet.begin(), paramSet.end(), globalParameters.parameterArray.begin());
     }
+
     /** parse the anisotropy Direction set */
     const SetAnisotropyDirectionArray& anisotropySet = d_anisotropySet.getValue();
     if (!anisotropySet.empty())
     {
         globalParameters.anisotropyDirection.resize(anisotropySet.size());
         std::copy(anisotropySet.begin(), anisotropySet.end(),
-             globalParameters.anisotropyDirection.begin());
+                  globalParameters.anisotropyDirection.begin());
     }
 
+    /// We check if we need to search from the context as there is no topology explicitely given
     if (l_topology.empty())
     {
         msg_info() << "link to Topology container should be set to ensure right behavior. First Topology found in current context will be used.";
@@ -120,8 +149,10 @@ template <class DataTypes> void TetrahedronViscoelasticityFEMForceField<DataType
     }
 
     m_topology = l_topology.get();
+
     msg_info() << "Topology path used: '" << l_topology.getLinkedPath() << "'";
 
+    /// If there is still no topology we consider it as invalid case.
     if (m_topology == nullptr)
     {
         msg_error() << "No topology component found at path: " << l_topology.getLinkedPath() << ", nor in current context: " << this->getContext()->name;
@@ -129,21 +160,20 @@ template <class DataTypes> void TetrahedronViscoelasticityFEMForceField<DataType
         return;
     }
 
-
-    /** parse the input material name */
-    instantiateMaterial();
-
     if (!m_topology->getNbTetrahedra())
     {
         msg_error() << "object must have a Tetrahedral Set Topology.";
+        this->d_componentState.setValue(sofa::core::objectmodel::ComponentState::Invalid);
         return;
     }
+
+    /** parse the input material name */
+    instantiateMaterial();
 
     auto tetrahedronInf = sofa::helper::getWriteAccessor(m_tetrahedronInfo);
 
     /// prepare to store info in the triangle array
     tetrahedronInf.resize(m_topology->getNbTetrahedra());
-
 
     sofa::helper::getWriteAccessor(m_edgeInfo).resize(m_topology->getNbEdges());
     m_edgeInfo.createTopologyHandler(m_topology);
@@ -166,12 +196,12 @@ template <class DataTypes> void TetrahedronViscoelasticityFEMForceField<DataType
     /// set the call back function upon creation of a tetrahedron
     m_tetrahedronInfo.createTopologyHandler(m_topology);
     m_tetrahedronInfo.setCreationCallback([this](Index tetrahedronIndex, TetrahedronRestInformation& tetraInfo,
-        const core::topology::BaseMeshTopology::Tetrahedron& tetra,
-        const sofa::type::vector< Index >& ancestors,
-        const sofa::type::vector< SReal >& coefs)
-    {
-        createTetrahedronRestInformation(tetrahedronIndex, tetraInfo, tetra, ancestors, coefs);
-    });
+                                                 const core::topology::BaseMeshTopology::Tetrahedron& tetra,
+                                                 const sofa::type::vector< Index >& ancestors,
+                                                 const sofa::type::vector< SReal >& coefs)
+                                          {
+                                              createTetrahedronRestInformation(tetrahedronIndex, tetraInfo, tetra, ancestors, coefs);
+                                          });
 
     this->d_componentState.setValue(sofa::core::objectmodel::ComponentState::Valid);
 }
@@ -199,10 +229,10 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::setdirection(
 
 template< class DataTypes >
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::createTetrahedronRestInformation(Index tetrahedronIndex,
-    TetrahedronRestInformation& tinfo,
-    const Tetrahedron&,
-    const sofa::type::vector<Index>&,
-    const sofa::type::vector<SReal>&)
+                                                                                          TetrahedronRestInformation& tinfo,
+                                                                                          const Tetrahedron&,
+                                                                                          const sofa::type::vector<Index>&,
+                                                                                          const sofa::type::vector<SReal>&)
 {
     const sofa::type::vector< Tetrahedron >& tetrahedronArray = m_topology->getTetrahedra();
     const sofa::type::vector< Edge>& edgeArray = m_topology->getEdges();
@@ -216,16 +246,18 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::createTetrahedronRestIn
     const Tetrahedron& t = tetrahedronArray[tetrahedronIndex];
     BaseMeshTopology::EdgesInTetrahedron te = m_topology->getEdgesInTetrahedron(tetrahedronIndex);
 
-    // store the point position
-
+    /// store the point position
     for (j = 0; j < 4; ++j)
         point[j] = restPosition[t[j]];
+
     /// compute 6 times the rest volume
     volume = dot(cross(point[2] - point[0], point[3] - point[0]), point[1] - point[0]);
+
     /// store the rest volume
     tinfo.m_volScale = (Real)(1.0 / volume);
     tinfo.m_restVolume = fabs(volume / 6);
-    // store shape vectors at the rest configuration
+
+    /// store shape vectors at the rest configuration
     for (j = 0; j < 4; ++j)
     {
         if (!(j % 2))
@@ -240,7 +272,6 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::createTetrahedronRestIn
     {
         Edge e = m_topology->getLocalEdgesInTetrahedron(j);
         int k = e[0];
-        //int l=e[1];
         if (edgeArray[te[j]][0] != t[k])
         {
             k = e[1];
@@ -251,20 +282,32 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::createTetrahedronRestIn
 template <class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::addForce(const core::MechanicalParams* /* mparams */ /* PARAMS FIRST */, DataVecDeriv& d_f, const DataVecCoord& d_x, const DataVecDeriv& /* d_v */)
 {
+    if(!this->mstate)
+    {
+        msg_error() << "object must have a Tetrahedral Set Topology.";
+        this->d_componentState.setValue(sofa::core::objectmodel::ComponentState::Invalid);
+        return;
+    }
+
+
     auto f = sofa::helper::getWriteAccessor(d_f);
     const VecCoord& x = d_x.getValue();
 
-     Real dt = this->getContext()->getDt(); // get the time step of simulation
-
+    /// get the time step of simulation
+    Real dt = this->getContext()->getDt();
 
     unsigned int j = 0, k = 0, l = 0;
     const unsigned int nbTetrahedra = m_topology->getNbTetrahedra();
 
     auto tetrahedronInf = sofa::helper::getWriteAccessor(m_tetrahedronInfo);
 
-    assert(this->mstate);
-
     Coord dp[3], x0, sv;
+
+    vector<Vec6d> vecStressSPK;
+    vector<Vec6d> vecStressCauchy;
+
+    vector<Real> vecStressVonMisesElement;
+
 
     for (unsigned int i = 0; i < nbTetrahedra; i++)
     {
@@ -273,9 +316,9 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::addForce(const core::Me
 
         x0 = x[ta[0]];
 
-        // compute the deformation gradient
-        // deformation gradient = sum of tensor product between vertex position and shape vector
-        // optimize by using displacement with first vertex
+        /// compute the deformation gradient
+        /// deformation gradient = sum of tensor product between vertex position and shape vector
+        /// optimize by using displacement with first vertex
         dp[0] = x[ta[1]] - x0;
         sv = tetInfo->m_shapeVector[1];
         for (k = 0; k < 3; ++k)
@@ -315,82 +358,11 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::addForce(const core::Me
         MatrixSym ID;
         ID.identity();
 
-     
 
+        /// Definition the Cauchy-Green strain Tensor E
 
+        tetInfo->E = 0.5*(tetInfo->C-ID);
 
-
-    // Definition the Cauchy-Green strain Tensor E 
-        
-      for (k = 0; k < 3; ++k)
-        {
-            for (l = 0; l < 3; ++l)
-            {
-                tetInfo->E(k, l) = 0.5*(tetInfo->C(k,l)-ID(k,l));
-
-
-            }
-        }
-
-
- 
-// 2) In this code we will apply the Newmark scheme integration to discretize the differential equations of the Linear ViscoElastic Materials.
-// In particular the Newmark Scheme is applied to the Strain rate tensor calculation.
-
-
-
-
-
-// Calculation of Strain rate tensor according to Newmark    Edot(t+dt) = Edot(t) + 0.5*dt*(a(t+dt)+a(t)) Where a is the Strain acceleration   
-      for (k = 0; k < 3; ++k)
-        {
-            for (l = 0; l < 3; ++l)
-            {
-                tetInfo->Edot(k,l) = tetInfo->Edotprev(k,l) + 0.5*dt*(tetInfo->acc_E(k,l)+tetInfo->prevacc_E(k,l));
-            }
-        }
-
-
-// Calculation of Strain acceleration.
-      for (k = 0; k < 3; ++k)
-        {
-            for (l = 0; l < 3; ++l)
-            {
-                tetInfo->acc_E(k,l) = (tetInfo->Edot(k,l)-tetInfo->Edotprev(k,l))/dt;
-            }
-        }
-    
- 
-
-    // Store the value of Strain rate every time step
-
-
-
-
-
-      for (k = 0; k < 3; ++k)
-        {
-            for (l = 0; l < 3; ++l)
-            {
-                tetInfo->Edotprev(k,l) = tetInfo->Edot(k,l);
-            }
-        }
-
-
-
-
-    // Store the  value of the Strain Acceleration every Time step.
-
-      for (k = 0; k < 3; ++k)
-        {
-            for (l = 0; l < 3; ++l)
-            {
-                tetInfo->prevacc_E(k,l) = tetInfo->acc_E(k,l);
-            }
-        }
-
-
-    
 
         if (globalParameters.anisotropyDirection.size() > 0)
         {
@@ -403,21 +375,59 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::addForce(const core::Me
 
         tetInfo->J = dot(areaVec, dp[0]) * tetInfo->m_volScale;
         tetInfo->trC = (Real)(tetInfo->C(0, 0) + tetInfo->C(1, 1) +
-                              tetInfo->C(2, 2));
+                               tetInfo->C(2, 2));
+
+
 
         tetInfo->m_SPKTensorGeneral.clear();
-        m_myMaterial->deriveSPKTensor(tetInfo, globalParameters, tetInfo->m_SPKTensorGeneral, dt);
+        tetInfo->m_CauchyStressTensor.clear();
+
+        tetInfo->m_SPKStress.clear();
+        tetInfo->m_CauchyStress.clear();
+
+        m_myMaterial->deriveSPKTensor(tetInfo, globalParameters, tetInfo->m_SPKTensorGeneral,tetInfo->m_CauchyStressTensor,dt);
+
+        /// Stress map in simulation (Voigt notation of the Stress tensor)
+        vecStressSPK.push_back(tetInfo->m_SPKTensorGeneral.getVoigt());
+        vecStressCauchy.push_back(tetInfo->m_CauchyStressTensor.getVoigt());
+
+        /// Python Bindings
+        tetInfo->m_SPKStress = tetInfo->m_SPKTensorGeneral.getVoigt();
+        tetInfo->m_CauchyStress = tetInfo->m_CauchyStressTensor.getVoigt();
+
+        /// Calculation of the General Von mises Stress per Element
+        tetInfo->m_VonMisesStress = sqrt(0.5*((tetInfo->m_CauchyStress(0)-tetInfo->m_CauchyStress(1))*(tetInfo->m_CauchyStress(0)-tetInfo->m_CauchyStress(1)) +
+            (tetInfo->m_CauchyStress(1)-tetInfo->m_CauchyStress(2))*(tetInfo->m_CauchyStress(1)-tetInfo->m_CauchyStress(2)) +
+            (tetInfo->m_CauchyStress(2)-tetInfo->m_CauchyStress(0))*(tetInfo->m_CauchyStress(2)-tetInfo->m_CauchyStress(0)) +
+            3*(tetInfo->m_CauchyStress(3)*tetInfo->m_CauchyStress(3)+tetInfo->m_CauchyStress(4)*tetInfo->m_CauchyStress(4) + 
+            tetInfo->m_CauchyStress(5)*tetInfo->m_CauchyStress(5))
+            ));
+
+        vecStressVonMisesElement.push_back(tetInfo->m_VonMisesStress);
 
 
         for (l = 0; l < 4; ++l)
         {
             f[ta[l]] -= tetInfo->m_deformationGradient* (
-                tetInfo->m_SPKTensorGeneral * tetInfo->m_shapeVector[l]) * tetInfo->m_restVolume;
+                            tetInfo->m_SPKTensorGeneral * tetInfo->m_shapeVector[l]) * tetInfo->m_restVolume;
         }
-
-
         
     }
+
+
+
+    d_stressSPK.beginEdit();
+    d_stressSPK.setValue(vecStressSPK);
+    d_stressSPK.endEdit();
+
+    d_Cauchystress.beginEdit();
+    d_Cauchystress.setValue(vecStressCauchy);
+    d_Cauchystress.endEdit();
+
+    d_stressVonMisesElement.beginEdit();
+    d_stressVonMisesElement.setValue(vecStressVonMisesElement);
+    d_stressVonMisesElement.endEdit();
+
 
 
     /// indicates that the next call to addDForce will need to update the stiffness matrix
@@ -428,7 +438,7 @@ template <class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
 {
 
-    Real dt = this->getContext()->getTime();
+    SReal dt = this->getContext()->getDt();
 
     unsigned int k = 0, l;
     const unsigned int nbEdges = m_topology->getNbEdges();
@@ -448,7 +458,6 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
     {
         TetrahedronRestInformation* tetInfo = &tetrahedronInf[i];
         Matrix3& df = tetInfo->m_deformationGradient;
-//          Matrix3 Tdf=df.transposed();
         const BaseMeshTopology::EdgesInTetrahedron& te = m_topology->getEdgesInTetrahedron(i);
 
         /// describe the jth vertex index of triangle no i
@@ -467,7 +476,6 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
             }
             Matrix3 &edgeDfDx = einfo->DfDx;
 
-
             const Coord& svl = tetInfo->m_shapeVector[l];
             const Coord& svk = tetInfo->m_shapeVector[k];
 
@@ -476,8 +484,7 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
             N.clear();
             type::vector<MatrixSym> inputTensor;
             inputTensor.resize(3);
-            
-            //  MatrixSym input1,input2,input3,outputTensor;
+
             for (int m = 0; m < 3; m++)
             {
                 for (int n = m; n < 3; n++)
@@ -488,20 +495,12 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
                 }
             }
 
-
-
-
-
-
-
-
             for (int m = 0; m < 3; m++)
             {
                 m_myMaterial->applyElasticityTensor(tetInfo, globalParameters, inputTensor[m],
                                                     outputTensor, dt);
                 Coord vectortemp = df * (outputTensor * svk);
                 Matrix3 Nv;
-                //Nv.clear();
                 for (int u = 0; u < 3; u++)
                 {
                     Nv[u][m] = vectortemp[u];
@@ -509,24 +508,18 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
                 N += Nv.transposed();
             }
 
-
-            //Now M
+            /// Now M
             Real productSD = 0;
-
             const Coord vectSD = tetInfo->m_SPKTensorGeneral * svk;
             productSD = dot(vectSD, svl);
             M[0][1] = M[0][2] = M[1][0] = M[1][2] = M[2][0] = M[2][1] = 0;
             M[0][0] = M[1][1] = M[2][2] = (Real)productSD;
 
             edgeDfDx += (M+N)*tetInfo->m_restVolume;
-
-
-        }// end of for j
-    }//end of for i
+        }
+    }
     m_updateMatrix=false;
 }
-
-
 
 template <class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::addDForce(const core::MechanicalParams* mparams /* PARAMS FIRST */, DataVecDeriv& d_df, const DataVecDeriv& d_dx)
@@ -557,11 +550,13 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::addDForce(const core::M
 
         deltax = dx[v0] - dx[v1];
         dv0 = einfo->DfDx * deltax;
-        // do the transpose multiply:
+
+        /// do the transpose multiply:
         dv1[0] = (Real)(deltax[0] * einfo->DfDx[0][0] + deltax[1] * einfo->DfDx[1][0] + deltax[2] * einfo->DfDx[2][0]);
         dv1[1] = (Real)(deltax[0] * einfo->DfDx[0][1] + deltax[1] * einfo->DfDx[1][1] + deltax[2] * einfo->DfDx[2][1]);
         dv1[2] = (Real)(deltax[0] * einfo->DfDx[0][2] + deltax[1] * einfo->DfDx[1][2] + deltax[2] * einfo->DfDx[2][2]);
-        // add forces
+
+        /// add forces
         df[v0] += dv1 * kFactor;
         df[v1] -= dv0 * kFactor;
     }
@@ -608,17 +603,16 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::addKToMatrix(sofa::line
     }
 }
 
-
 template<class DataTypes>
 Mat<3,3,SReal> TetrahedronViscoelasticityFEMForceField<DataTypes>::getPhi(int tetrahedronIndex)
 {
     auto tetrahedronInf = sofa::helper::getWriteAccessor(m_tetrahedronInfo);
     TetrahedronRestInformation* tetInfo = &tetrahedronInf[tetrahedronIndex];
-    assert(tetInfo);
+
+
+
     return tetInfo->m_deformationGradient;
 }
-
-
 
 template<class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::computeBBox(const core::ExecParams*, bool onlyVisible)
@@ -632,7 +626,6 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::computeBBox(const core:
 template<class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::draw(const core::visual::VisualParams* vparams)
 {
-    //  unsigned int i;
     if (!vparams->displayFlags().getShowForceFields()) return;
     if (!this->mstate) return;
 
@@ -641,14 +634,12 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::draw(const core::visual
     const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
 
     if (vparams->displayFlags().getShowWireFrame())
-          vparams->drawTool()->setPolygonMode(0,true);
+        vparams->drawTool()->setPolygonMode(0,true);
 
     drawViscoelasticTets(vparams, x, m_topology, d_materialName.getValue());
 
     if (vparams->displayFlags().getShowWireFrame())
-          vparams->drawTool()->setPolygonMode(0,false);
-
-
+        vparams->drawTool()->setPolygonMode(0,false);
 }
 
 } // namespace 

@@ -1,7 +1,19 @@
 /******************************************************************************
-*                 SOFA, Simulation Open-Framework Architecture                *
-*                    (c) 2006 INRIA, USTL, UJF, CNRS, MGH                     *
+*  THE SOFA VISCOELASTIC PLUGIN.                                              *
+*                                                                             * 
+* DESCRIPTION:                                                                *
+* This plugin is made for the Simulation Open-Framework Architecture (SOFA)   *
+* (c) 2006 INRIA, USTL, UJF, CNRS, MGH.                                       *
+* The plugin consist in a Visco-Elastic force field for tetrahedral meshes.   * 
+* Several rheological models are implemented.                                 *
 *                                                                             *
+* CONTRIBUTORS:                                                               *         
+* The plugin is made by the collaboration beween the Robotics and Multibody   * 
+* Mechanics Department (R&MM) Vrije Universiteit Brussel (VUB), Bruxelles     *
+* Belgium, and the DEFROST Team of the INRIA - Lille, France.                 *
+*                                                                             *
+*                                                                             *
+* LICENSE:                                                                    *
 * This program is free software; you can redistribute it and/or modify it     *
 * under the terms of the GNU Lesser General Public License as published by    *
 * the Free Software Foundation; either version 2.1 of the License, or (at     *
@@ -15,11 +27,10 @@
 * You should have received a copy of the GNU Lesser General Public License    *
 * along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
-* Authors: The SOFA Team and external contributors (see Authors.txt)          *
+* Author: Pasquale Ferrentino                                                 *
 *                                                                             *
-* Contact information: contact@sofa-framework.org                             *
+* Contact information: pasquale.ferrentino@vub.be                             *
 ******************************************************************************/
-#pragma once
 #include <SofaViscoElastic/config.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
@@ -29,29 +40,24 @@
 #include <sofa/type/MatSym.h>
 #include <string>
 
-//#include <Eigen/Core>
-#include <Eigen/QR>
-#include <Eigen/Eigenvalues>
-//#include <opencv2/imgproc.hpp>
-//#include <opencv2/imgcodecs.hpp>
-//#include <opencv2/highgui.hpp>
+
+
 
 namespace sofa::SofaViscoElastic::material
 {
 
-template<typename Real>
-class StrainInformation;
-
 template<typename DataTypes>
 struct MaterialParameters;
 
-/** a Class that describe a generic hyperelastic material .
+template<typename DataTypes>
+class StrainInformation;
+
+/** a Class that describe a generic Viscoelastic material .
 The material is described based on continuum mechanics and the description is independent
 to any discretization method like the finite element method. 
-A material is generically described by a strain energy function and its first and second derivatives.
 */
 template<class DataTypes>
-class ViscoelasticMaterial
+class BaseViscoelasticMaterial
 {
 public:
 
@@ -59,36 +65,28 @@ public:
   typedef typename Coord::value_type Real;
   typedef type::MatSym<3,Real> MatrixSym;
   typedef type::Mat<3,3,Real> Matrix3;
- 
 
+  virtual ~BaseViscoelasticMaterial(){}
 
-   virtual ~ViscoelasticMaterial(){}
-
-  
-
-
+  void myCommonFunction(){
+      ///real content
+  };
 
   /** computes the second Piola Kirchhoff stress tensor of the current configuration */
-    virtual void deriveSPKTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,MatrixSym &, Real& )  {}
+   virtual void deriveSPKTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,MatrixSym &,MatrixSym &, SReal&)  = 0;
 
   /** computes the Elasticity Tensor of the current configuration */
-
-    virtual void applyElasticityTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,const MatrixSym& , MatrixSym &, Real&)  {}
-
-
-
-
+   virtual void applyElasticityTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,const MatrixSym& , MatrixSym &, SReal&)  = 0;
 };
 
-/** structure that store the parameters required to that are necessary to compute the strain energy
+/** structure that store the parameters required to compute the constitutive law.
 The material parameters might be constant in space (homogeneous material) or not */
 template<typename DataTypes>
 struct MaterialParameters {
   typedef typename DataTypes::Coord Coord;
   typedef typename Coord::value_type Real;
 
-  /** an array of Real values that correspond to the material parameters : the size depends on the material,
-  e.g. 2 Lame coefficients for St-Venant Kirchhoff materials */
+  /** an array of Real values that correspond to the material parameters : the size depends on the material */
   std::vector<Real> parameterArray;
   /** the direction of anisotropy in the rest configuration  : the size of the array is 0 if the material is
   isotropic, 1 if it is transversely isotropic and 2 for orthotropic materials (assumed to be orthogonal to each other)*/
@@ -114,21 +112,22 @@ public:
   bool hasBeenInitialized;
   /// right Cauchy-Green deformation tensor C (gradPhi^T gradPhi)
   MatrixSym C;
-  MatrixSym SPKdot;//stress rate
-  MatrixSym SPKdotprev;
-  MatrixSym acc_SPK;
-  MatrixSym prevacc_SPK;
 
   Real logJ;
   MatrixSym E; //strain tensor
+  MatrixSym Eprev; // strain tensor previous time step. 
+
+  MatrixSym Evisc1; // viscous strain
+  MatrixSym Evisc_prev1; // viscous strain tensor at previous time step
+
+  MatrixSym Evisc2; // viscous strain (second dashpot)
+  MatrixSym Evisc_prev2; // viscous strain tensor at previous time step (second dashpot)
+
+  MatrixSym Evdot1;// viscous strain rate
+  MatrixSym Evdot2;
 
 
-  MatrixSym Edot;// strain rate
-  MatrixSym Edotprev;
-  MatrixSym acc_E;
-  MatrixSym prevacc_E;
-
-  StrainInformation() : trC(0), J(0), lambda(0), hasBeenInitialized(false), C(), SPKdot(), SPKdotprev(), logJ(0),E(), Edot(), Edotprev(),acc_E(), prevacc_E() {}
+  StrainInformation() : trC(0), J(0), lambda(0), hasBeenInitialized(false), C(), logJ(0),E(), Eprev(), Evisc1(), Evisc_prev1(), Evisc2(), Evisc_prev2(), Evdot1(), Evdot2() {}
   virtual ~StrainInformation() {}
 };
 

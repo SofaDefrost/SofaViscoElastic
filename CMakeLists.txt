@@ -12,11 +12,13 @@ set(HEADER_FILES
     ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoelasticityFEMForceField.inl
 
 
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/ViscoelasticMaterial.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/BaseViscoelasticMaterial.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/MaxwellFirstOrder.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/KelvinVoigtFirstOrder.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/SLSKelvinVoigtFirstOrder.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/SLSMaxwellFirstOrder.h
+        ${SOFAVISCOELASTIC_SOURCE_DIR}/material/Burgers.h
+
 )
 
 set(SOURCE_FILES

@@ -1,7 +1,19 @@
 /******************************************************************************
-*                 SOFA, Simulation Open-Framework Architecture                *
-*                    (c) 2006 INRIA, USTL, UJF, CNRS, MGH                     *
-*                                                                             *
+*  THE SOFA VISCOELASTIC PLUGIN.                                              *
+*                                               							  * 
+* DESCRIPTION:                                                                *
+* This plugin is made within the SOFA, Simulation Open-Framework Architecture *
+* (c) 2006 INRIA, USTL, UJF, CNRS, MGH.                                       *
+* The plugin consist in a Visco-Elastic force field for tetrahedral meshes.	  * 
+* Several rheological models are implemented.                                 *
+* 	                                                                          *
+* CONTRIBUTORS:																  *			
+* The plugin is made by the collaboration beween the Robotics and Multibody   * 
+* Mechanics Department (R&MM) Vrije Universiteit Brussel (VUB), Bruxelles     *
+* Belgium, and the DEFROST Team of the INRIA - Lille, France.    		      *
+* 																			  *
+* 																		  	  *
+* LICENSE:    							  									  *
 * This program is free software; you can redistribute it and/or modify it     *
 * under the terms of the GNU Lesser General Public License as published by    *
 * the Free Software Foundation; either version 2.1 of the License, or (at     *
@@ -15,10 +27,11 @@
 * You should have received a copy of the GNU Lesser General Public License    *
 * along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
-* Authors: Pasquale Ferrentino The SOFA Team(see Authors.txt)                 *
+* Author: Pasquale Ferrentino                                                 *
 *                                                                             *
-* Contact information: contact@sofa-framework.org & pasquale.ferrentino@vub.be*
+* Contact information: pasquale.ferrentino@vub.be                             *
 ******************************************************************************/
+
 
 #define SOFA_COMPONENT_FORCEFIELD_TETRAHEDRONVISCOELASTICITYFEMFORCEFIELD_CPP
 
@@ -40,4 +53,4 @@ int TetrahedronViscoelasticityFEMForceFieldClass = core::RegisterObject("Generic
 template class SOFAVISCOELASTIC_API TetrahedronViscoelasticityFEMForceField<Vec3Types>;
 
 
-} // namespace sofa::component::solidmechanics::fem::hyperelastic
+} // namespace 

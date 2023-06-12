@@ -33,27 +33,27 @@ class CylinderController(Sofa.Core.Controller):
 				self.max1 = self.pos3[j][2]
 				self.posmax1 = j
 
+		print(self.posmax1)
 
-
-		self.lin = self.node.cilinder.tetras.position.value[self.posmax1][2]
+		self.lin = self.node.cylinder.tetras.position.value[self.posmax1][2]
 	
-		file1 = open(path + "SLS_Maxwell.txt","w")
-		file1.write(str(0.0)+' '+str(0.0)+ '\n' )
-		file1.close()
 
 
 
 	def onAnimateBeginEvent(self,event):
-		#print(self.node.cilinder.FEM.getF(369))
 		self.time = self.node.time.value
-		epsilon = (self.node.cilinder.tetras.position.value[self.posmax1][2]-self.lin)/self.lin
-		#self.node.cilinder.CFF.totalForce.value = [0,0,(3.141592653589793e4)*(signal.square(2 * np.pi * 10 * self.time))] ## --> Square wave function
-		#self.node.cilinder.CFF.totalForce.value = [0,0,(3.141592653589793e4)*np.sin(2*np.pi*0.6*self.time)] ## --> Sinusoidal function
-		self.node.cilinder.CFF.totalForce.value = [0,0,3.141592653589793e4] ## Calculated with Matlab --> Step function 
+		self.tau = self.node.cylinder.FEM.ParameterSet.value[2] 
+		epsilon = (self.node.cylinder.tetras.position.value[4][2]-self.lin)/self.lin
+
+## IN THIS CODE WE WILL DO A CREEP TEST, SO WE WILL APPLY A STEP AS INPUT, USING THE CONSTANTFORCEFIELD LOAD.
+ 
+
+##	STEP SIGNAL 
+		self.node.cylinder.CFF.totalForce.value = [0,0,3.141592653589793e4*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
+
+
+
 		print(epsilon*100)
-		file1 = open(path + "SLS_Maxwell.txt","a")
-		file1.write(str(self.time)+' '+str(self.node.cilinder.CFF.totalForce.value[2])+' '+str(epsilon*100)+ '\n' )
-		file1.close()
 
 
 
@@ -83,14 +83,13 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.Constraint.Lagrangian.Correction")
 	rootNode.addObject("RequiredPlugin", name = "Sofa.Component.Constraint.Projective")
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
-	rootNode.addObject("RequiredPlugin", name="Sofa.Component.SolidMechanics.FEM.ViscoElastic")
 
 
 	rootNode.gravity=[0,0,-9.81]
-	rootNode.dt = (90/1400)
+	rootNode.dt = (1e9/(20e9*100))
 	rootNode.name = 'rootNode'
 	rootNode.addObject('DefaultAnimationLoop', computeBoundingBox="0")
-	rootNode.addObject('GenericConstraintSolver', tolerance=1e-12, maxIterations=10000)
+	rootNode.addObject('GenericConstraintSolver', tolerance=1e-24, maxIterations=100000000)
 	rootNode.addObject('OglSceneFrame', style='Arrows', alignment='TopRight')
 
 
@@ -98,32 +97,37 @@ def createScene(rootNode):
 
 
 ## SLS-MAXWELL FIRST ORDER Cylinder: Material F5000- R0.5  (BLUE)
-	cilinder = rootNode.addChild('cilinder')
+	cylinder = rootNode.addChild('cylinder')
 
-	cilinder.addObject('EulerImplicitSolver', name="Solver",rayleighMass = 0.0, rayleighStiffness = 0.0, firstOrder = False)
+	cylinder.addObject('EulerImplicitSolver', name="Solver",rayleighMass = 0.0, rayleighStiffness = 0.0, firstOrder = True, trapezoidalScheme = False)
 
-	cilinder.addObject('CGLinearSolver', name="ItSolver", iterations="2500", tolerance="1e-15", threshold = '1e-30')
-	cilinder.addObject('MeshVTKLoader', name='loader', filename='mesh/cylinder1513.vtk', translation = [0, 0.0, 0])
-	cilinder.addObject('MechanicalObject', name='tetras', template='Vec3d', src = '@loader')
-	cilinder.addObject('TetrahedronSetTopologyContainer', name="topo", src ='@loader')
-	cilinder.addObject('TetrahedronSetTopologyModifier' ,  name="Modifier")
-	cilinder.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3d" ,name="GeomAlgo")
+	cylinder.addObject('CGLinearSolver', name="ItSolver", iterations="25000000", tolerance="1e-15", threshold = '1e-30')
+	cylinder.addObject('MeshVTKLoader', name='loader', filename='mesh/cylinder5296.vtk', translation = [0, 0.0, 0])
+	cylinder.addObject('MechanicalObject', name='tetras', template='Vec3d', src = '@loader')
+	cylinder.addObject('TetrahedronSetTopologyContainer', name="topo", src ='@loader')
+	cylinder.addObject('TetrahedronSetTopologyModifier' ,  name="Modifier")
+	cylinder.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3d" ,name="GeomAlgo")
 
-	cilinder.addObject('UniformMass', totalMass="0.013", src = '@topo')
+	cylinder.addObject('UniformMass', totalMass="1e-6", src = '@topo')
 
-	cilinder.addObject('BoxROI', name='boxROI1',box="-0.011 -0.011 -0.001  0.011 0.011 0.001", drawBoxes=True)
-	cilinder.addObject('FixedConstraint', indices = '@boxROI1.indices')
-	E0 = 70e9
-	E1 = 20e9
-	tau1 = (90)/(70*20)
+	cylinder.addObject('BoxROI', name='boxROI1',box="-0.011 -0.011 -0.001  0.011 0.011 0.001", drawBoxes=True)
+	cylinder.addObject('FixedConstraint', indices = '@boxROI1.indices')
+	cylinder.addObject('BoxROI', name="boxToPull", box=[-0.011, -0.011, 0.1, 0.011, 0.011, 0.101], drawBoxes=True)
+	cylinder.addObject('PartialFixedConstraint', indices=cylinder.boxToPull.indices.linkpath, fixedDirections=[1, 1, 0])
+
+	E1 = 70e9
+	E2 = 20e9
+	tau1 = 1e9/E1
+	tau2 = 1e9/E2
 	nu = 0.44
-	cilinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSMaxwellFirstOrder", ParameterSet=str(E0)+' '+str(E1)+' '+str(tau1)+' '+str(nu))
+	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="Burgers", ParameterSet= str(E1)+' '+str(tau1)+' '+str(E2)+' '+str(tau2)+' '+str(nu))
+	
+	cylinder.addObject('ConstantForceField', name = "CFF", listening = True, totalForce =[0,0,0],template="Vec3d", src= "@topo", indices = cylinder.boxToPull.indices.linkpath) 
+	
+	cylinder.addObject(CylinderController(node=rootNode, pos3 = rootNode.cylinder.tetras.position.value))
 
-	cilinder.addObject('ConstantForceField', name = "CFF", listening = True, totalForce =[0,0,0],template="Vec3d", src= "@topo", indices =" 4 5 6 7 20 21 22 23 24 25 26 27 28 29 30 31 48 49 50 67 68 69 86 87 88 105 106 107 143 144 146 149 160 161 178 186 190 202 203 205 208 219 220 237 245 249 261 262 264 267 278 279 296 304 308 320 321 323 326 337 338 355 363 367 369 370 371 372 373 374 375 376 377 378 379 380 381 382 383 384 385 386 387 388 389 390 391 392 393 396 404 408 409 411 412 414 415 421 455 458 459 460 461 468 469 470 471 476 477 478 479 483 ") 
-	cilinder.addObject(CylinderController(node=rootNode, pos3 = rootNode.cilinder.tetras.position.value))
 
-
-	modelVisu3 = cilinder.addChild('visu')
+	modelVisu3 = cylinder.addChild('visu')
 	modelVisu3.addObject('MeshSTLLoader', name='loader', filename='mesh/cylinder5296.stl', translation = [0.0,0.0,0.0])
 	modelVisu3.addObject('OglModel', src='@loader', color=[0,0,1,1])
 	modelVisu3.addObject('BarycentricMapping')

@@ -1,7 +1,19 @@
 /******************************************************************************
-*                 SOFA, Simulation Open-Framework Architecture                *
-*                    (c) 2006 INRIA, USTL, UJF, CNRS, MGH                     *
+*  THE SOFA VISCOELASTIC PLUGIN.                                              *
+*                                                                             * 
+* DESCRIPTION:                                                                *
+* This plugin is made for the Simulation Open-Framework Architecture (SOFA)   *
+* (c) 2006 INRIA, USTL, UJF, CNRS, MGH.                                       *
+* The plugin consist in a Visco-Elastic force field for tetrahedral meshes.   * 
+* Several rheological models are implemented.                                 *
 *                                                                             *
+* CONTRIBUTORS:                                                               *         
+* The plugin is made by the collaboration beween the Robotics and Multibody   * 
+* Mechanics Department (R&MM) Vrije Universiteit Brussel (VUB), Bruxelles     *
+* Belgium, and the DEFROST Team of the INRIA - Lille, France.                 *
+*                                                                             *
+*                                                                             *
+* LICENSE:                                                                    *
 * This program is free software; you can redistribute it and/or modify it     *
 * under the terms of the GNU Lesser General Public License as published by    *
 * the Free Software Foundation; either version 2.1 of the License, or (at     *
@@ -15,33 +27,38 @@
 * You should have received a copy of the GNU Lesser General Public License    *
 * along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
-* Authors: The SOFA Team and external contributors (see Authors.txt)          *
+* Author: Pasquale Ferrentino                                                 *
 *                                                                             *
-* Contact information: contact@sofa-framework.org                             *
+* Contact information: pasquale.ferrentino@vub.be                             *
 ******************************************************************************/
 
 #pragma once
 
-#include "config.h.in"
+#include <SofaViscoElastic/config.h>
+#include <SofaViscoElastic/material/BaseViscoelasticMaterial.h>
 
-#include <SofaViscoElastic/material/ViscoelasticMaterial.h>
-#include <sofa/core/behavior/ForceField.h>
 #include <sofa/type/Mat.h>
 #include <sofa/type/MatSym.h>
+
 #include <sofa/core/topology/BaseMeshTopology.h>
+#include <sofa/core/behavior/ForceField.h>
 #include <sofa/core/topology/TopologyData.h>
+#include <sofa/helper/OptionsGroup.h>
 
 namespace sofa::SofaViscoElastic
 {
 
-using namespace sofa::type;
-using namespace sofa::defaulttype;
-using namespace sofa::core::topology;
+namespace
+{
+    using namespace sofa::type;
+    using namespace sofa::defaulttype;
+    using namespace sofa::core::topology;
+}
 
-//***************** Tetrahedron FEM code for several elastic models: TotalLagrangianForceField************************//
+//Tetrahedron FEM code for several Linear Viscoelastic models: Total Lagrangian ForceField
 
-/** Compute Finite Element forces based on tetrahedral elements.
-*/
+// Compute Finite Element forces based on tetrahedral elements.
+
 template<class DataTypes>
 class TetrahedronViscoelasticityFEMForceField : public core::behavior::ForceField<DataTypes>
 {
@@ -60,16 +77,13 @@ public:
 
     typedef Mat<3,3,Real> Matrix3;
     typedef MatSym<3,Real> MatrixSym;
-    typedef type::Mat<6,6,Real> Matrix6;
-    typedef type::Mat<6,3,Real> Matrix63;
+    typedef Vec<6, Real> Vec6;
 
     typedef std::pair<MatrixSym,MatrixSym> MatrixPair;
     typedef std::pair<Real,MatrixSym> MatrixCoeffPair;
 
-
     typedef type::vector<Real> SetParameterArray;
     typedef type::vector<Coord> SetAnisotropyDirectionArray;
-
 
     typedef core::topology::BaseMeshTopology::Index Index;
     typedef core::topology::BaseMeshTopology::Tetra Element;
@@ -81,7 +95,6 @@ public:
     typedef sofa::core::topology::BaseMeshTopology::EdgesInTriangle EdgesInTriangle;
     typedef sofa::core::topology::BaseMeshTopology::EdgesInTetrahedron EdgesInTetrahedron;
     typedef sofa::core::topology::BaseMeshTopology::TrianglesInTetrahedron TrianglesInTetrahedron;
-
 
     material::MaterialParameters<DataTypes> globalParameters;
 
@@ -100,14 +113,22 @@ public:
         Real m_volume{};
         /// Second Piola Kirchhoff stress tensor 
         MatrixSym m_SPKTensorGeneral;
+
+        /// Cauchy Green stress Tensor 
+        MatrixSym m_CauchyStressTensor;
+
+        /// Von Mises Stress
+        Real m_VonMisesStress;
+
+        /// to export the stresses with Python Binding
+        Vec6 m_SPKStress;
+        Vec6 m_CauchyStress;
+
         /// deformation gradient = gradPhi
         Matrix3 m_deformationGradient;
-        Real m_strainEnergy{};
         
-
-
         /// Output stream
-        inline friend std::ostream& operator<< ( std::ostream& os, const TetrahedronRestInformation& eri ) {  os << eri.m_SPKTensorGeneral; return os;  }
+        inline friend std::ostream& operator<< ( std::ostream& os, const TetrahedronRestInformation& /*eri*/ ) {  /*os << eri.m_SPKTensorGeneral;*/ return os;  }
         /// Input stream
         inline friend std::istream& operator>> ( std::istream& in, TetrahedronRestInformation& /*eri*/ ) { return in; }
 
@@ -130,11 +151,6 @@ public:
     };
 
  public :
-
-    core::topology::BaseMeshTopology* m_topology;
-    VecCoord m_initialPoints;   /// the intial positions of the points
-    bool m_updateMatrix;
-
     Data<bool> d_stiffnessMatrixRegularizationWeight; ///< Regularization of the Stiffness Matrix (between true or false)
     Data<std::string> d_materialName; ///< the name of the material
     Data<SetParameterArray> d_parameterSet; ///< The global parameters specifying the material
@@ -142,15 +158,15 @@ public:
 
     TetrahedronData<sofa::type::vector<TetrahedronRestInformation> > m_tetrahedronInfo; ///< Internal tetrahedron data
     EdgeData<sofa::type::vector<EdgeInformation> > m_edgeInfo; ///< Internal edge data
-   
+    Data<vector<Vec6d> > d_stressSPK;
+    Data<vector<Vec6d> > d_Cauchystress;
+    Data<vector<Real> > d_stressVonMisesElement;
     /// Link to be set to the topology container in the component graph.
     SingleLink<TetrahedronViscoelasticityFEMForceField<DataTypes>, sofa::core::topology::BaseMeshTopology, BaseLink::FLAG_STOREPATH | BaseLink::FLAG_STRONGLINK> l_topology;
 
-public:
+    
     void setMaterialName(std::string materialName);
-
     void setparameter(const SetParameterArray& param);
-
     void setdirection(const SetAnisotropyDirectionArray& direction);
 
     /**
@@ -160,42 +176,37 @@ public:
     void createTetrahedronRestInformation(Index, TetrahedronRestInformation& t, const Tetrahedron&,
         const sofa::type::vector<Index>&, const sofa::type::vector<SReal>&);
 
-protected:
-    TetrahedronViscoelasticityFEMForceField();
-
-    ~TetrahedronViscoelasticityFEMForceField() override;
-
-public:
-//
-    void init() override;
-    
+    void init() override;    
     void addForce(const core::MechanicalParams* mparams /* PARAMS FIRST */, DataVecDeriv& d_f, const DataVecCoord& d_x, const DataVecDeriv& d_v) override;
     void addDForce(const core::MechanicalParams* mparams /* PARAMS FIRST */, DataVecDeriv& d_df, const DataVecDeriv& d_dx) override;
     SReal getPotentialEnergy(const core::MechanicalParams*, const DataVecCoord&) const override;
     void addKToMatrix(sofa::linearalgebra::BaseMatrix *mat, SReal k, unsigned int &offset) override;
 
     void draw(const core::visual::VisualParams* vparams) override;
-
     void computeBBox(const core::ExecParams* params, bool onlyVisible) override;
 
     Mat<3,3, SReal> getPhi( int tetrahedronIndex);
 
-
 protected:
+    TetrahedronViscoelasticityFEMForceField();
+    ~TetrahedronViscoelasticityFEMForceField() override;
 
-    /// the array that describes the complete material energy and its derivatives
 
-    std::unique_ptr<material::ViscoelasticMaterial<DataTypes> > m_myMaterial;
-
-    void testDerivatives();
+    /// the array that describes the complete material properties of a specific Viscoelastic model
+    std::unique_ptr<material::BaseViscoelasticMaterial<DataTypes> > m_myMaterial;
 
     void updateTangentMatrix();
-
     void instantiateMaterial();
+
+private:
+    core::topology::BaseMeshTopology* m_topology;
+    VecCoord m_initialPoints;   /// the intial positions of the points
+    bool m_updateMatrix;
+
 };
 
 #if  !defined(SOFA_COMPONENT_FORCEFIELD_TetrahedronViscoelasticityFEMForceField_CPP)
 extern template class SOFAVISCOELASTIC_API TetrahedronViscoelasticityFEMForceField<defaulttype::Vec3Types>;
 #endif //  !defined(SOFA_COMPONENT_FORCEFIELD_TetrahedronViscoelasticityFEMForceField_CPP)
 
-} // namespace sofa::component::solidmechanics::fem::hyperelastic
+} // namespace 
