@@ -123,11 +123,11 @@ class MaxwellFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
         for(int k = 0; k<3; ++k){
             for(int l=0; l<3; ++l){
                 if(sinfo->Evdot1(k,l) >= (1/tau)){
-                    outputTensor = Thirdmatrix*(E1-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
+                    outputTensor = Thirdmatrix*(E1-(E1/(3*(1-2*nu)))*log(sinfo->J))*0.5 + 0.5*inversematrix*(E1/(3*(1-2*nu)))*trHC;
                 }
                 else{
 
-                    outputTensor = Thirdmatrix*(E1*exp(-t/tau)-(E1/(3*(1-2*nu)))*log(sinfo->J))+ inversematrix*(E1/(3*(1-2*nu)))*trHC;
+                    outputTensor = Thirdmatrix*(E1*exp(-t/tau)-(E1/(3*(1-2*nu)))*log(sinfo->J))*0.5 + 0.5*inversematrix*(E1/(3*(1-2*nu)))*trHC;
 
                 }
             }
