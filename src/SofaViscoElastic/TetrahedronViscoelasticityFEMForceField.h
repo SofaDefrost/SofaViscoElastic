@@ -161,6 +161,7 @@ public:
     Data<vector<Vec6d> > d_stressSPK;
     Data<vector<Vec6d> > d_Cauchystress;
     Data<vector<Real> > d_stressVonMisesElement;
+
     /// Link to be set to the topology container in the component graph.
     SingleLink<TetrahedronViscoelasticityFEMForceField<DataTypes>, sofa::core::topology::BaseMeshTopology, BaseLink::FLAG_STOREPATH | BaseLink::FLAG_STRONGLINK> l_topology;
 
