@@ -13,9 +13,12 @@ Viscoelasticity is a property of elastomeric materials that influences their mec
 ![Basic Models](./img/img1.png)
 
 These two models represent the basic unit that constitutes the viscoelastic materials. They are composed of an elastic part described by the spring symbol and a viscous one represented by the dashpot.
+Anyway, the Maxwell and the Kelvin-Voigt models describe the behavior of a few kinds of materials, like silly-putty, gels, etc... For the rubber and elastomer viscoelasticity, different viscoelasti models have to be used, like the Standard linear solid (SLS) Maxwell/Kelvin-Voigt representation:
+
 Elastomers and rubbers are polymeric materials present in nature but are also used in several industrial applications. Many research fields are involved in developing new elastomeric materials and rubbers, such as soft robotics and surgical applications. For this reason, this plugin is indicated for users who want a realistic mechanical simulation of these materials afflicted by the viscoelastic effect.
 
 ## Python Functions and Bindings
+
 ## Algorithm
 
 ## Examples
