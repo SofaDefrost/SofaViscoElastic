@@ -24,9 +24,9 @@ They add another spring in parallel (Maxwell representation) or in series (Kelvi
 ## Python Functions and Bindings
 The principal function of this plugin is the so-called TethrahedronViscoelasticityFEMForceField which applies the viscoelastic constitutive law to the tetrahedral mesh uploaded in SOFA, the syntax in Python is the following :
 
-![Python function](./img/img1.png)
+![Python function](./img/img3.png)
 
-The addictional field to fill are:
+The additional fields to fill in are:
 
 
 
