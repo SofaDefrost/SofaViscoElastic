@@ -27,7 +27,18 @@ The principal function of this plugin is the so-called TethrahedronViscoelastici
 ![Python function](./img/img3.png)
 
 The additional fields to fill in are:
-
+* template: related to the DOF expressed in the Mechanical Object in SOFA.
+* name: The name chosen by the user for the function (will appear in the SOFA simulation Graph)
+* materialName: The name of the viscoelastic model that the user wants to use, he can choose between:
+  - MaxwellFirstOrder
+  - KelvinVoigtFirstOrder
+  - SLSMaxwellFirstOrder
+  - SLSKelvinVoigtFirstOrder
+  - Burgers
+  - MaxwellSecondOrder
+  - KelvinVoigtSecondOrder
+  - SLSMaxwellSecondOrder
+  - SLSKelvinVoigtSecondOrder 
 
 
 ## Algorithm
