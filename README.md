@@ -23,11 +23,18 @@ To describe their viscoelastic properties, different viscoelastic models have to
 They add another spring in parallel (Maxwell representation) or in series (Kelvin-Voigt representation) to make the model stable under creep and stress relaxation and are excellent for describing viscoelastic polymer rheology. In the SofaViscoElastic plugin, 9 different viscoelastic models are presented. For more theoretical information the users can refer to the paper "Considering the viscoelastic effects in soft robotic modeling" by Ferrentino et al. submitted in Soft Robotic Journal (SORO). 
 
 ## Installation
-This plugin is available only for Ubuntu/Linux OS.
-To install this plugin from the source the user has to download this folder and place it in:\
+This plugin is available only for Ubuntu/Linux OS. The only dependency is the SOFA plugin "SofaPython3" (make sure it is installed).
+To install this plugin from the source the user has to download this folder and place it in:
 ```
  $ /home/adminName/sofa/src/applications/plugins
 ```
+Then the user has to write this in the CMakeLists.txt present in the previous destination:
+```
+$ sofa_add_subdirectory(plugin SofaViscoElastic SofaViscoElastic)
+```
+then recompile SOFA and it should start its installation. Enjoy!
+For any problem contact the author at this email: pasquale.ferrentino@vub.be.
+
 ## Python Functions and Bindings
 The principal function of this plugin is the so-called TethrahedronViscoelasticityFEMForceField which applies the viscoelastic constitutive law to the tetrahedral mesh uploaded in SOFA, the syntax in Python is the following :
 
