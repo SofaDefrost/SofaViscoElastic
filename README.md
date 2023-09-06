@@ -52,7 +52,7 @@ The user can choose these quantities:
 * getF(): get the deformation gradient (F) of the tetrahedron.
 * getSPKStress(): get the stresses of the Second-Piola Kirchhoff tensor.
 * getCauchyStress(): get the stresses Cauchy tensor.
-* getVonMisesStress: get the Von Mises stresses.
+* getVonMisesStress(): get the Von Mises stresses.
 
 P.S. The stresses are per Element not per Node.
 ## Algorithm
