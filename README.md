@@ -50,9 +50,9 @@ The user can choose these quantities:
 * getRestVolume(): get the rest volume of the tetrahedron.
 * getVolScale(): get the volume scale of the tetrahedron.
 * getF(): get the deformation gradient (F) of the tetrahedron.
-* getSPKstress(): get the stresses of the Second-Piola Kirchhoff tensor.
-* getCauchystress(): get the stresses Cauchy tensor.
-* getVonMisesstress: get the Von Mises stresses.
+* getSPKStress(): get the stresses of the Second-Piola Kirchhoff tensor.
+* getCauchyStress(): get the stresses Cauchy tensor.
+* getVonMisesStress: get the Von Mises stresses.
 
 P.S. The stresses are per Element not per Node.
 ## Algorithm
