@@ -39,7 +39,7 @@ The additional fields to fill in are:
   - KelvinVoigtSecondOrder
   - SLSMaxwellSecondOrder
   - SLSKelvinVoigtSecondOrder 
-* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli (E) and the relaxation times (&tau;) defined as the ratio between the viscosity (&nu;) and the Young modulus.
+* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli (E) and the relaxation times ($&tau_i$;) defined as the ratio between the viscosity (&nu;) and the Young modulus.
 
 
 
