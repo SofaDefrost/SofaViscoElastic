@@ -25,9 +25,9 @@ They add another spring in parallel (Maxwell representation) or in series (Kelvi
 ## Installation
 This plugin is available only for Ubuntu/Linux OS.
 To install this plugin from the source the user has to download this folder and place it in:\
-'''
+```
  $ /home/adminName/sofa/src/applications/plugins
- '''
+```
 ## Python Functions and Bindings
 The principal function of this plugin is the so-called TethrahedronViscoelasticityFEMForceField which applies the viscoelastic constitutive law to the tetrahedral mesh uploaded in SOFA, the syntax in Python is the following :
 
