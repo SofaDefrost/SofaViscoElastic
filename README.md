@@ -39,10 +39,22 @@ The additional fields to fill in are:
   - KelvinVoigtSecondOrder
   - SLSMaxwellSecondOrder
   - SLSKelvinVoigtSecondOrder 
-* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli ($E_i$) and the relaxation times ($&tau;_i$) defined as the ratio between the viscosity ($&eta;_i$) and the relative Young modulus.
+* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli ($E_i$) and the relaxation times ($&tau;_i$) defined as the ratio between the viscosity ($&eta;_i$) and the relative Young modulus. At the end the user has to specify the Poisson Ratio (&nu;).
 Furthermore in the plugin are integrated some Python Bindings to export some internal parameters of specific tetrahedrons:
+![Python Binding](./img/img4.png)
 
- 
+The user can choose these quantities:
+* getShapeVector(): Get the shape Vector of the specific tetrahedron (specified in the brackets).
+* getFiberDirection(): get the fiber direction of the tetrahedron.
+* getVolume(): get the volume of the tetrahedron.
+* getRestVolume(): get the rest volume of the tetrahedron.
+* getVolScale(): get the volume scale of the tetrahedron.
+* getF(): get the deformation gradient (F) of the tetrahedron.
+* getSPKstress(): get the stresses of the Second-Piola Kirchhoff tensor.
+* getCauchystress(): get the stresses Cauchy tensor.
+* getVonMisesstress: get the Von Mises stresses.
+
+P.S. The stresses are per Element not per Node.
 ## Algorithm
 
 ## Examples
