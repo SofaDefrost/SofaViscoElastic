@@ -71,6 +71,6 @@ The user can choose these quantities:
 
 P.S. The stresses are per Element not per Node.
 ## Algorithm
-
+In the Figure.4 of the paper, it is represents the SLS-Maxwell model of first order, used as example to make understand the algorithm 
 ## Examples
  
