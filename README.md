@@ -5,7 +5,7 @@
 * [Installation](#installation)
 * [Python Functions and Bindings](#python-functions-and-bindings)
 * [Algorithm](#algorithm)
-* [Examples](#examples)
+* [Applications](#applications)
 
 ## Introduction
 SofaViscoElastic is a plugin for the Software Open Architecture Framework (SOFA) which implements the fundamental linear viscoelastic constitutive laws applied to tetrahedral meshes.
@@ -83,6 +83,15 @@ Applying the discretization of this equation, in particular an Euler backward sc
 ![Discretized stress balance](./img/equation2.PNG)
 
 The terms with the exponent "n" refer to the quantity calculated at the current time step, while the ones with the exponent "n-1" refer to the quantity calculated at the previous time step. Hence, in viscoelastic materials, the actual strain stress status depends on the previous strain stress conditions, which means that the material has the "memory" of its previous internal stress/strain state.  
-Instead, the hydrostatic part of the stress tensor is calculated using this general formula:
-## Examples
- 
+Instead, the hydrostatic part of the stress tensor is calculated using this general formula for the $4^{th}$ order elasticity tensor for visco-elastic materials:
+
+![Fourth order elasticity tensor](./img/equation3.PNG)
+
+$E^{*}(t)$ is the so-called Prony series and it depends on the particular model of viscoelasticity considered.
+For more details on the algorithm, please consult Section 3 of the paper. 
+
+## Applications
+ In the plugin are developed different example scenes in Python3. The examples show a cylindrical beam which are considering viscoelastic constitutive models and is undergoing a creep test and a stress relaxation test. 
+ The plugin is developed through the collaboration between the Brubotics lab of the VUB (Vrije Universiteit Brussel) University and the DEFROST team of the INRIA Institute in Lille. 
+ The authors of this plugin are convinced that it can serve many applications from soft robotics to medical applications and are looking for future collaborations for further developments.
+ For other info please contact: pasquale.ferrentino@vub.be.
