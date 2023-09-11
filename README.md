@@ -82,6 +82,7 @@ Applying the discretization of this equation, in particular an Euler backward sc
 
 ![Discretized stress balance](./img/equation2.PNG)
 
-
+The terms with the exponent "n" refer to the quantity calculated at the current time step, while the ones with the exponent "n-1" refer to the quantity calculated at the previous time step. Hence, in viscoelastic materials, the actual strain stress status depends on the previous strain stress conditions, which means that the material has the "memory" of its previous internal stress/strain state.  
+Instead, the hydrostatic part of the stress tensor is calculated using this general formula:
 ## Examples
  
