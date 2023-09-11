@@ -74,6 +74,7 @@ P.S. The stresses are per Element not per Node.
 In Figure 4 of the paper, the SLS-Maxwell model of first order is used as an example to understand the algorithm used in this plugin. 
 In this section are explained the principal steps of the algorithm. First of all the aim of the plugin is to calculate the deviatoric and hydrostatic part of the stress tensor.
 The deviatoric part calculation derives from the stress balance on the springs-dashpot 3D model:
+
 ![Stress balance](./img/equation1.png)
 
 ## Examples
