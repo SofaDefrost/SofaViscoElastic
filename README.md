@@ -77,7 +77,7 @@ The deviatoric part calculation derives from the stress balance on the springs-d
 
 ![Stress balance](./img/equation1.PNG)
 
-Where $&sigma;^{dev}$ is the deviatoric stress tensor, $&sdot{&epsilon;};$
+Where $&sigma;^{dev}$ is the deviatoric stress tensor, $&epsilon;^{&middot}$
 
 ## Examples
  
