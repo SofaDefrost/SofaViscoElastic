@@ -77,7 +77,10 @@ The deviatoric part calculation derives from the stress balance on the springs-d
 
 ![Stress balance](./img/equation1.PNG)
 
-Where $&sigma;^{dev}$ is the deviatoric stress tensor, $&epsilon;^{&middot}$
+Where $&sigma;^{dev}$ is the deviatoric stress tensor, $&epsilon;$ is the strain tensor, while $&epsilon;^{&middot; v}$ is the strain rate which acts in the dashpot of the model.
+Applying the discretization of this equation, in particular an Euler backward scheme on the strain rate formulation, we obtain:
+
+
 
 ## Examples
  
