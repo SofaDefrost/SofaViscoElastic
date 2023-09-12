@@ -93,5 +93,5 @@ For more details on the algorithm, please consult Section 3 of the paper.
 ## Applications
  In the plugin are developed different example scenes in Python3. The examples show a cylindrical beam which are considering viscoelastic constitutive models and is undergoing a creep test and a stress relaxation test. 
  The plugin is developed through the collaboration between the Brubotics lab of the VUB (Vrije Universiteit Brussel) University and the DEFROST team of the INRIA Institute in Lille. 
- The authors of this plugin are convinced that it can serve many applications from soft robotics to medical applications and are looking for future collaborations for further developments.
+ The authors of this plugin are looking for future collaborations for further developments.
  For other info please contact: pasquale.ferrentino@vub.be.
