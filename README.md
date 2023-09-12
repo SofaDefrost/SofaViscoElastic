@@ -1,4 +1,5 @@
 # SofaViscoElastic
+![Logo](./img/logo.png)
 
 ## Table of contents
 * [Introduction](#introduction)
