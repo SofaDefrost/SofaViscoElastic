@@ -61,7 +61,7 @@ For the simulation is strictly recommended to set the Rayleigh coefficient of th
 
 ![Solver](./img/Solver.png)
 
-The simulation results are strictly dependent on the time step, the author advises to use this range of time steps:
+The simulation results are strictly dependent on the time step (dt), the author advises to use this range of time steps:
 
 $$ dt \leq {&tau;_i \over 100} $$
   
