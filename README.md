@@ -54,7 +54,10 @@ The additional fields to fill in are:
   - KelvinVoigtSecondOrder
   - SLSMaxwellSecondOrder
   - SLSKelvinVoigtSecondOrder 
-* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli ($E_i$) and the relaxation times ($&tau;_i$) defined as the ratio between the viscosity ($&eta;_i$) and the relative Young modulus. At the end the user has to specify the Poisson Ratio (&nu;).
+* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli ($E_i$) and the relaxation times ($&tau;_i$) defined as the ratio between the viscosity ($&eta;_i$) and the relative Young modulus. At the end, the user has to specify the Poisson Ratio (&nu;).
+For the simulation is strictly recommended to set the Rayleigh coefficient of the Solver to 0:
+
+  
 Furthermore in the plugin are integrated some Python Bindings to export some internal parameters of specific tetrahedrons:
 
 ![Python Binding](./img/img4.png)
