@@ -26,7 +26,7 @@ set(SOURCE_FILES
     ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoelasticityFEMForceField.cpp
     )
 
-sofa_find_package(Sofa.Simulation.Core REQUIRED)
+find_package(Sofa.Simulation.Core REQUIRED)
 
 sofa_find_package(SofaPython3 QUIET)
 
