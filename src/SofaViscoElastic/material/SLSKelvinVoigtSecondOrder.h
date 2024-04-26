@@ -42,10 +42,12 @@
 #include <sofa/type/Mat.h>
 #include <string>
 
+
+
 namespace sofa::SofaViscoElastic::material
 {
 
-/* a Class that describe a generic Viscoelastic material : example of  Standard Linear Solid Kelvin Representaion.
+/* a Class that describe a generic Viscoelastic material : example of  Kelvin-Voigt Second Order.
 The material is described based on continuum mechanics and the description is independent
 to any discretization method like the finite element method.
 
@@ -57,47 +59,66 @@ COMSOL: https://doc.comsol.com/5.5/doc/com.comsol.help.sme/sme_ug_theory.06.26.h
 
 */  
 
+  
+
+
+
 template<class DataTypes>
-class SLSKelvinVoigtFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
+class SLSKelvinVoigtSecondOrder : public BaseViscoelasticMaterial<DataTypes>{
+
     typedef typename DataTypes::Coord::value_type Real;
     typedef type::Mat<3,3,Real> Matrix3;
     typedef type::MatSym<3,Real> MatrixSym;
 
-
-    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
+    virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param, MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
     {
 
-        Real E0=param.parameterArray[0];
-        Real E1=param.parameterArray[1];
-        Real tau=param.parameterArray[2];
+        Real E1 = param.parameterArray[0];
+        Real E2 = param.parameterArray[1];
+        Real tau2 = param.parameterArray[2];
+        Real E3 = param.parameterArray[3];        
+        Real tau3 = param.parameterArray[4];
+
         MatrixSym inversematrix;
         invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
-
-        /// Calculation Viscous strain
-        sinfo->Evisc1 = (1/(1+(((E0*dt)/(E1*tau))+(dt/tau))))*(sinfo->Evisc_prev1+((E0*dt)/(E1*tau))*sinfo->E);
-        /// Calculation Viscous strain rate
-        sinfo-> Evdot1 = (sinfo->Evisc1 - sinfo->Evisc_prev1)/dt;
-
-        /// The equation of the Cauchy Stress tensor for the SLS Kelvin Model.
-        CauchyStressTensor = E0*(sinfo->E-sinfo->Evisc1); 
-
-        /// store the viscous strain every time step
-        sinfo->Evisc_prev1 = sinfo->Evisc1;
         
+
+
+        /// The algorithm consist into define for any model the strain that is acting on each dashpot present in the model, called Eviscous (Evisc in the code)
+
+        sinfo->Evisc1 = (1/(1+((E1+E2)*dt/(E2*tau2))))*(sinfo->Evisc_prev1 + (E1*dt/(E2*tau2))*sinfo->E - (E1*dt/(E2*tau2))*sinfo->Evisc2);
+        sinfo->Evisc2 = (1/(1+(dt/(tau3))))*(sinfo->Evisc_prev2 + (E2*dt/(E3*tau3))*sinfo->Evisc1+(E2*tau2/(E3*tau3))*(sinfo->Evisc1-sinfo->Evisc_prev1));
+        
+
+
+
+        // Calculation Viscous strain rate
+        sinfo-> Evdot1 = (sinfo->Evisc1 - sinfo->Evisc_prev1)/dt;
+        sinfo-> Evdot2 = (sinfo->Evisc2 - sinfo->Evisc_prev2)/dt;
+
+        /// The equation of the Cauchy Stress tensor for the Maxwell Model.
+        CauchyStressTensor = E1*(sinfo->E-sinfo->Evisc1-sinfo->Evisc2);
+
+        /// Store the viscous strain every time step.
+        sinfo->Evisc_prev1 = sinfo->Evisc1;
+        sinfo->Evisc_prev2 = sinfo->Evisc2;
 
         /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
         SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
     }
- 
 
-    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
-    {
-        Real E0=param.parameterArray[0];
-        Real E1=param.parameterArray[1];
-        Real tau=param.parameterArray[2];
-        Real nu=param.parameterArray[3];
+    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& dt) override
+      {
+
+        Real E1 = param.parameterArray[0];
+        Real E2 = param.parameterArray[1];
+        Real tau2 = param.parameterArray[2];
+        Real E3 = param.parameterArray[3];        
+        Real tau3 = param.parameterArray[4];
+        Real nu = param.parameterArray[5];
+
         MatrixSym inversematrix;
         invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
@@ -109,25 +130,34 @@ class SLSKelvinVoigtFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
 
 
 
-
         MatrixSym Thirdmatrix;
         Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
         for(int k = 0; k<3; ++k){
             for(int l=0; l<3; ++l){
-                if(sinfo->Evdot1(k,l) >= (1/tau)){
-                    Real alpha = E0+E1;
+                if(sinfo->Evdot1(k,l) >= (1/tau2) && sinfo->Evdot2(k,l) >= (1/tau3) ){
+                    outputTensor = Thirdmatrix*(E1+E2+E3-((E1+E2+E3)/(3*(1-2*nu)))*log(sinfo->J))*0.5 + 0.5*inversematrix*((E1+E2+E3)/(3*(1-2*nu)))*trHC;
+                }
+                else if(sinfo->Evdot1(k,l) < (1/tau2) && sinfo->Evdot2(k,l) >= (1/tau3) ){
 
-                    outputTensor = Thirdmatrix*(0.5*alpha-((E0+E1)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E0+E1)/(3*(1-2*nu)))*trHC*0.5;
+                    outputTensor = Thirdmatrix*(E1+E2/(1-exp(-dt/tau2))+E3-((E1+E2+E3)/(3*(1-2*nu)))*log(sinfo->J))*0.5 + 0.5*inversematrix*((E1+E2+E3)/(3*(1-2*nu)))*trHC;
+
+                }
+                else if(sinfo->Evdot1(k,l) >= (1/tau2) && sinfo->Evdot2(k,l) < (1/tau3) ){
+
+                    outputTensor = Thirdmatrix*(E1+E2+E3/(1-exp(-dt/tau3))-((E1+E2+E3)/(3*(1-2*nu)))*log(sinfo->J))*0.5 + 0.5*inversematrix*((E1+E2+E3)/(3*(1-2*nu)))*trHC;
+
                 }
                 else{
-                    Real alpha = E0+E1/(1-exp(-t/tau));
+                    outputTensor = Thirdmatrix*(E1+E2/(1-exp(-dt/tau2))+E3/(1-exp(-dt/tau3))-((E1+E2+E3)/(3*(1-2*nu)))*log(sinfo->J))*0.5 + 0.5*inversematrix*((E1+E2+E3)/(3*(1-2*nu)))*trHC;
 
-                    outputTensor = Thirdmatrix*(0.5*alpha-((E0+E1)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E0+E1)/(3*(1-2*nu)))*trHC*0.5;
                 }
             }
         }
+
     }
+
 };
+
 
 
 } // namespace sofa::component::solidmechanics::fem::hyperelastic::material

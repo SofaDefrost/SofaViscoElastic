@@ -102,7 +102,7 @@ class MaxwellFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
         SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
     }
 
-    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
+    virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& dt) override
       {
         Real E1=param.parameterArray[0];
         Real tau=param.parameterArray[1];
@@ -127,7 +127,7 @@ class MaxwellFirstOrder : public BaseViscoelasticMaterial<DataTypes>{
                 }
                 else{
 
-                    outputTensor = Thirdmatrix*(E1*exp(-t/tau)-(E1/(3*(1-2*nu)))*log(sinfo->J))*0.5 + 0.5*inversematrix*(E1/(3*(1-2*nu)))*trHC;
+                    outputTensor = Thirdmatrix*(E1*exp(-dt/tau)-(E1/(3*(1-2*nu)))*log(sinfo->J))*0.5 + 0.5*inversematrix*(E1/(3*(1-2*nu)))*trHC;
 
                 }
             }

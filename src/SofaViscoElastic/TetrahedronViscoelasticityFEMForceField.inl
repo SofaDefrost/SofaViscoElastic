@@ -41,6 +41,11 @@
 #include <SofaViscoElastic/material/SLSKelvinVoigtFirstOrder.h>
 #include <SofaViscoElastic/material/Burgers.h>
 
+/// Private Models
+#include <SofaViscoElastic/material/MaxwellSecondOrder.h>
+#include <SofaViscoElastic/material/SLSMaxwellSecondOrder.h>
+#include <SofaViscoElastic/material/KelvinVoigtSecondOrder.h>
+#include <SofaViscoElastic/material/SLSKelvinVoigtSecondOrder.h>
 
 
 
@@ -68,6 +73,8 @@ template <class DataTypes> TetrahedronViscoelasticityFEMForceField<DataTypes>::T
     , d_stressSPK(initData(&d_stressSPK, "stressSPK","The stress of the Second Piola Kirchhoff Stress Tensor per Element"))   
     , d_Cauchystress(initData(&d_Cauchystress, "CauchyStress","The stress of the Cauchy Stress Tensor per Element"))
     , d_stressVonMisesElement(initData(&d_stressVonMisesElement, "stressVonMisesElement","The stress of the Von Mises Stress per Element"))
+    , d_stressVonMisesNode(initData(&d_stressVonMisesNode, "stressVonMisesNode","The stress of the Von Mises Stress per Node"))
+
     , l_topology(initLink("topology", "link to the topology container"))
 {
 }
@@ -105,11 +112,30 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::instantiateMaterial()
 
         m_myMaterial = std::make_unique<Burgers<DataTypes>>();
     }
-                 
+    else if (material == "MaxwellSecondOrder")
+    {        
+
+        m_myMaterial = std::make_unique<MaxwellSecondOrder<DataTypes>>();
+    } 
+    else if (material == "SLSMaxwellSecondOrder")
+    {        
+
+        m_myMaterial = std::make_unique<SLSMaxwellSecondOrder<DataTypes>>();
+    }
+    else if (material == "KelvinVoigtSecondOrder")
+    {        
+
+        m_myMaterial = std::make_unique<KelvinVoigtSecondOrder<DataTypes>>();
+    } 
+    else if (material == "SLSKelvinVoigtSecondOrder")
+    {        
+
+        m_myMaterial = std::make_unique<SLSKelvinVoigtSecondOrder<DataTypes>>();
+    }                  
     else
     {
         msg_error() << "material name " << material <<
-            " is not valid (should be MaxwellFirstOrder, SLSMaxwellFirstOrder, KelvinVoigtFirstOrder, SLSKelvinVoigtFirstOrder, Burgers)";
+            " is not valid (should be MaxwellFirstOrder, SLSMaxwellFirstOrder, KelvinVoigtFirstOrder, SLSKelvinVoigtFirstOrder, Burgers, MaxwellSecondOrder, SLSMaxwellSecondOrder, KelvinVoigtSecondOrder, SLSKelvinVoigtSecondOrder)";
     }
 
     if (m_myMaterial)
@@ -403,7 +429,11 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::addForce(const core::Me
             tetInfo->m_CauchyStress(5)*tetInfo->m_CauchyStress(5))
             ));
 
-        vecStressVonMisesElement.push_back(tetInfo->m_VonMisesStress);
+    vecStressVonMisesElement.push_back(tetInfo->m_VonMisesStress);
+
+
+
+
 
 
         for (l = 0; l < 4; ++l)
@@ -427,6 +457,7 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::addForce(const core::Me
     d_stressVonMisesElement.beginEdit();
     d_stressVonMisesElement.setValue(vecStressVonMisesElement);
     d_stressVonMisesElement.endEdit();
+
 
 
 
@@ -516,8 +547,30 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
             M[0][0] = M[1][1] = M[2][2] = (Real)productSD;
 
             edgeDfDx += (M+N)*tetInfo->m_restVolume;
+
+
+
+
         }
     }
+
+
+/*   const VecCoord& dofs = this->mstate->read(core::ConstVecCoordId::position())->getValue();
+    helper::WriteAccessor<Data<type::vector<Real> > > vMN =  d_stressVonMisesNode;
+    helper::WriteAccessor<Data<type::vector<Real> > > vME =  d_stressVonMisesElement;
+
+  for(Index dof = 0; dof < dofs.size(); dof++) 
+    {    
+       core::topology::BaseMeshTopology::TetrahedraAroundVertex tetrasAroundDOF = m_topology->getTetrahedraAroundVertex(dof);
+        vMN[dof] = 0;
+        for (size_t it = 0; it < tetrasAroundDOF.size(); it++)
+            vMN[dof] += vME[tetrasAroundDOF[it]];
+        if (!tetrasAroundDOF.empty())
+           vMN[dof] /= Real(tetrasAroundDOF.size());
+           
+    }*/
+
+
     m_updateMatrix=false;
 }
 
