@@ -23,7 +23,7 @@ To describe their viscoelastic properties, different viscoelastic models have to
 
 They add another spring in parallel (Maxwell representation) or in series (Kelvin-Voigt representation) to make the model stable under creep and stress relaxation and are excellent for describing viscoelastic polymer rheology. The SofaViscoElastic plugin presents 9 different viscoelastic models. For more theoretical information, users can refer to the paper "Considering the viscoelastic effects in soft robotic modeling" by Ferrentino et al., submitted in the Soft Robotic Journal (SORO). 
 
-## Hysteresys
+## Hysteresis
 The material models don't include hysteresis modeling, which will be added in future works.
 
 ## Installation
