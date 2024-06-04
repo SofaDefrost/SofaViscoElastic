@@ -207,7 +207,7 @@ private:
 
 };
 
-#if  !defined(SOFA_COMPONENT_FORCEFIELD_TetrahedronViscoelasticityFEMForceField_CPP)
+#if  !defined(SOFA_COMPONENT_FORCEFIELD_TETRAHEDRONVISCOELASTICITYFEMFORCEFIELD_CPP)
 extern template class SOFAVISCOELASTIC_API TetrahedronViscoelasticityFEMForceField<defaulttype::Vec3Types>;
 #endif //  !defined(SOFA_COMPONENT_FORCEFIELD_TetrahedronViscoelasticityFEMForceField_CPP)
 
