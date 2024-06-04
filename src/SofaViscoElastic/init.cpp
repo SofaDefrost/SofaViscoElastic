@@ -55,12 +55,12 @@ void initExternalModule()
 
 const char* getModuleName()
 {
-    return "SofaViscoElastic";
+    return MODULE_NAME;
 }
 
 const char* getModuleVersion()
 {
-    return "1.0";
+    return MODULE_VERSION;
 }
 
 void init()
@@ -78,4 +78,4 @@ const char* getModuleComponentList()
     static std::string classes = core::ObjectFactory::getInstance()->listClassesFromTarget(sofa_tostring(SOFA_TARGET));
     return classes.c_str();
 }
-} // namespace sofa::component::solidmechanics::fem::viscoelastic
+} // namespace sofa::SofaViscoElastic
