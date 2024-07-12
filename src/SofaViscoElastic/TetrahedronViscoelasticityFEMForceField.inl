@@ -33,22 +33,21 @@
 ******************************************************************************/
 
 #include <SofaViscoElastic/TetrahedronViscoelasticityFEMForceField.h>
+#include <sofa/core/behavior/ForceField.inl>
 #include <SofaViscoElastic/TetrahedronViscoelasticityFEMDrawing.h>
 
-#include <SofaViscoElastic/material/MaxwellFirstOrder.h>
-#include <SofaViscoElastic/material/SLSMaxwellFirstOrder.h>
-#include <SofaViscoElastic/material/KelvinVoigtFirstOrder.h>
-#include <SofaViscoElastic/material/SLSKelvinVoigtFirstOrder.h>
-#include <SofaViscoElastic/material/Burgers.h>
-
-/// Private Models
-#include <SofaViscoElastic/material/MaxwellSecondOrder.h>
-#include <SofaViscoElastic/material/SLSMaxwellSecondOrder.h>
-#include <SofaViscoElastic/material/KelvinVoigtSecondOrder.h>
-#include <SofaViscoElastic/material/SLSKelvinVoigtSecondOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/MaxwellFirstOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/SLSMaxwellFirstOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/KelvinVoigtFirstOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/SLSKelvinVoigtFirstOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/Burgers.h>
+#include <SofaViscoElastic/material/viscoelastic/MaxwellSecondOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/SLSMaxwellSecondOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/KelvinVoigtSecondOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/SLSKelvinVoigtSecondOrder.h>
 
 
-
+#include <sofa/core/visual/VisualParams.h>
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/core/behavior/ForceField.inl>
 #include <sofa/core/topology/TopologyData.inl>
@@ -60,12 +59,26 @@ using namespace sofa::defaulttype;
 using namespace core::topology;
 using namespace sofa::SofaViscoElastic::material;
 
+template<class DataTypes>
+const helper::OptionsGroup materialOptions {
+    MaxwellFirstOrder<DataTypes>::Name,
+    SLSMaxwellFirstOrder<DataTypes>::Name,
+    SLSMaxwellSecondOrder<DataTypes>::Name,
+    KelvinVoigtFirstOrder<DataTypes>::Name,
+    SLSKelvinVoigtSecondOrder<DataTypes>::Name,
+    MaxwellSecondOrder<DataTypes>::Name,
+    KelvinVoigtSecondOrder<DataTypes>::Name,
+    Burgers<DataTypes>::Name
+};
+
+
+
 template <class DataTypes> TetrahedronViscoelasticityFEMForceField<DataTypes>::TetrahedronViscoelasticityFEMForceField()
     : m_topology(nullptr)
     , m_initialPoints(0)
     , m_updateMatrix(true)
     , d_stiffnessMatrixRegularizationWeight(initData(&d_stiffnessMatrixRegularizationWeight, (bool)false,"matrixRegularization","Regularization of the Stiffness Matrix (between true or false)"))
-    , d_materialName(initData(&d_materialName,std::string("ArrudaBoyce"),"materialName","the name of the material to be used"))
+    , d_materialName(initData(&d_materialName, materialOptions<DataTypes>,"materialName","the name of the material to be used"))
     , d_parameterSet(initData(&d_parameterSet,"ParameterSet","The global parameters specifying the material"))
     , d_anisotropySet(initData(&d_anisotropySet,"AnisotropyDirections","The global directions of anisotropy of the material"))
     , m_tetrahedronInfo(initData(&m_tetrahedronInfo, "tetrahedronInfo", "Internal tetrahedron data"))
@@ -85,49 +98,49 @@ template <class DataTypes> TetrahedronViscoelasticityFEMForceField<DataTypes>::~
 template <class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::instantiateMaterial()
 {
-    const std::string& material = d_materialName.getValue();
+    const std::string& material = d_materialName.getValue().getSelectedItem();
 
-    if (material == "MaxwellFirstOrder")
+    if (material == MaxwellFirstOrder<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<MaxwellFirstOrder<DataTypes>>();
     }
-    else if (material == "SLSMaxwellFirstOrder")
+    else if (material == SLSMaxwellFirstOrder<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<SLSMaxwellFirstOrder<DataTypes>>();
     }
-    else if (material == "KelvinVoigtFirstOrder")
+    else if (material == KelvinVoigtFirstOrder<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<KelvinVoigtFirstOrder<DataTypes>>();
     } 
-    else if (material == "SLSKelvinVoigtFirstOrder")
+    else if (material == SLSKelvinVoigtFirstOrder<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<SLSKelvinVoigtFirstOrder<DataTypes>>();
     } 
-    else if (material == "Burgers")
+    else if (material == Burgers<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<Burgers<DataTypes>>();
     }
-    else if (material == "MaxwellSecondOrder")
+    else if (material == MaxwellSecondOrder<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<MaxwellSecondOrder<DataTypes>>();
     } 
-    else if (material == "SLSMaxwellSecondOrder")
+    else if (material == SLSMaxwellSecondOrder<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<SLSMaxwellSecondOrder<DataTypes>>();
     }
-    else if (material == "KelvinVoigtSecondOrder")
+    else if (material == KelvinVoigtSecondOrder<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<KelvinVoigtSecondOrder<DataTypes>>();
     } 
-    else if (material == "SLSKelvinVoigtSecondOrder")
+    else if (material == SLSKelvinVoigtSecondOrder<DataTypes>::Name)
     {        
 
         m_myMaterial = std::make_unique<SLSKelvinVoigtSecondOrder<DataTypes>>();
@@ -237,7 +250,7 @@ template <class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::setMaterialName(
     const std::string materialName)
 {
-    d_materialName.setValue(materialName);
+    sofa::helper::getWriteAccessor(d_materialName)->setSelectedItem(materialName);
 }
 
 template <class DataTypes>
@@ -469,7 +482,7 @@ template <class DataTypes>
 void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
 {
 
-    SReal dt = this->getContext()->getDt();
+    SReal t = this->getContext()->getTime();
 
     unsigned int k = 0, l;
     const unsigned int nbEdges = m_topology->getNbEdges();
@@ -529,7 +542,7 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
             for (int m = 0; m < 3; m++)
             {
                 m_myMaterial->applyElasticityTensor(tetInfo, globalParameters, inputTensor[m],
-                                                    outputTensor, dt);
+                                                    outputTensor, t);
                 Coord vectortemp = df * (outputTensor * svk);
                 Matrix3 Nv;
                 for (int u = 0; u < 3; u++)
@@ -656,6 +669,55 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::addKToMatrix(sofa::line
     }
 }
 
+
+template <class DataTypes>
+void TetrahedronViscoelasticityFEMForceField<DataTypes>::buildStiffnessMatrix(
+    core::behavior::StiffnessMatrix* matrix)
+{
+    /// if the  matrix needs to be updated
+    if (m_updateMatrix)
+    {
+        this->updateTangentMatrix();
+    }
+
+    const unsigned int nbEdges=m_topology->getNbEdges();
+    const type::vector< Edge> &edgeArray=m_topology->getEdges() ;
+    type::vector<EdgeInformation>& edgeInf = *(m_edgeInfo.beginEdit());
+    EdgeInformation *einfo;
+    unsigned int i,j,N0, N1, l;
+    Index noeud0, noeud1;
+
+    auto dfdx = matrix->getForceDerivativeIn(this->mstate)
+                       .withRespectToPositionsIn(this->mstate);
+
+    for(l=0; l<nbEdges; l++ )
+    {
+        einfo=&edgeInf[l];
+        noeud0=edgeArray[l][0];
+        noeud1=edgeArray[l][1];
+        N0 = 3*noeud0;
+        N1 = 3*noeud1;
+
+        for (i=0; i<3; i++)
+        {
+            for(j=0; j<3; j++)
+            {
+                dfdx(N0+i, N0+j) +=   einfo->DfDx[j][i];
+                dfdx(N0+i, N1+j) += - einfo->DfDx[j][i];
+                dfdx(N1+i, N0+j) += - einfo->DfDx[i][j];
+                dfdx(N1+i, N1+j) += + einfo->DfDx[i][j];
+            }
+        }
+    }
+    m_edgeInfo.endEdit();
+}
+
+template <class DataTypes>
+void TetrahedronViscoelasticityFEMForceField<DataTypes>::buildDampingMatrix(core::behavior::DampingMatrix*)
+{
+    // No damping in this ForceField
+}
+
 template<class DataTypes>
 Mat<3,3,SReal> TetrahedronViscoelasticityFEMForceField<DataTypes>::getPhi(int tetrahedronIndex)
 {
@@ -689,7 +751,7 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::draw(const core::visual
     if (vparams->displayFlags().getShowWireFrame())
         vparams->drawTool()->setPolygonMode(0,true);
 
-    drawViscoelasticTets(vparams, x, m_topology, d_materialName.getValue());
+    drawViscoelasticTets(vparams, x, m_topology, d_materialName.getValue().getSelectedItem());
 
     if (vparams->displayFlags().getShowWireFrame())
         vparams->drawTool()->setPolygonMode(0,false);

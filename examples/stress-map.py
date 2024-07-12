@@ -4,12 +4,10 @@ SofaRuntime.importPlugin("SofaComponentAll")
 # to add elements like Node or objects
 import Sofa.Core
 root = Sofa.Core.Node()
-import SofaViscoElastic
 import math 
 import numpy as np
 
 import os
-path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
 
 
 class CylinderController(Sofa.Core.Controller):
@@ -79,7 +77,8 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.Constraint.Lagrangian.Correction")
 	rootNode.addObject("RequiredPlugin", name = "Sofa.Component.Constraint.Projective")
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
-
+	rootNode.addObject('RequiredPlugin', name='Sofa.GL.Component.Rendering2D') # Needed to use components [OglColorMap]
+	rootNode.addObject('RequiredPlugin', name='SoftRobots') # Needed to use components [PositionConstraint] 
 
 	rootNode.addObject('FreeMotionAnimationLoop')
 	rootNode.addObject('GenericConstraintSolver', maxIterations=1e4, tolerance=1e-50)
@@ -112,9 +111,9 @@ def createScene(rootNode):
 	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSKelvinVoigtSecondOrder", ParameterSet= str(E1)+' '+str(E2)+' '+str(tau2)+' '+str(E3)+' '+str(tau3)+' '+str(nu))
 
 	cylinder.addObject('BoxROI', name='boxROI',box="-0.011 -0.011 -0.001  0.011 0.011 0.001", drawBoxes=True)
-	cylinder.addObject('FixedConstraint', indices = '@boxROI.indices')
+	cylinder.addObject('FixedProjectiveConstraint', indices = '@boxROI.indices')
 	cylinder.addObject('BoxROI', name="boxToPull", box=[-0.011, -0.011, 0.1, 0.011, 0.011, 0.101], drawBoxes=True)
-	cylinder.addObject('PartialFixedConstraint', indices=cylinder.boxToPull.indices.linkpath, fixedDirections=[1, 1, 0])
+	cylinder.addObject('PartialFixedProjectiveConstraint', indices=cylinder.boxToPull.indices.linkpath, fixedDirections=[1, 1, 0])
 
 ##	STEP SIGNAL 	
 	cylinder.addObject('PositionConstraint', name = 'displacement', indices=cylinder.boxToPull.indices.linkpath,valueType="displacement", value = 1e-4 , useDirections=[0, 0, 1])

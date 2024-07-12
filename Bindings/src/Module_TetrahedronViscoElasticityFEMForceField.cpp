@@ -35,6 +35,7 @@
 #include <pybind11/eval.h>
 namespace py = pybind11;
 #include <Binding_TetrahedronViscoElasticityFEMForceField.h>
+#include <Binding_TetrahedronViscoHyperElasticityFEMForceField.h>
 
 namespace sofapython3
 {
@@ -64,6 +65,7 @@ PYBIND11_MODULE(SofaViscoElastic, m) {
     py::module::import("SofaTypes");
 
      moduleAddTetrahedronViscoelasticityFEMForceField(m);
+     moduleAddTetrahedronViscoHyperelasticityFEMForceField(m);
 }
 
 }  // namespace sofapython3

@@ -14,10 +14,13 @@ set(SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Binding_TetrahedronViscoElasticityFEMForceField.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Module_TetrahedronViscoElasticityFEMForceField.cpp
 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Binding_TetrahedronViscoHyperElasticityFEMForceField.cpp
+
 )
 
 set(HEADER_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Binding_TetrahedronViscoElasticityFEMForceField.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Binding_TetrahedronViscoHyperElasticityFEMForceField.h
 
 )
 endif()
