@@ -22,33 +22,33 @@ To describe their viscoelastic properties, different viscoelastic models have to
 
 ![SLS Models](./img/img2.png)
 
-They add another spring in parallel (Maxwell representation) or in series (Kelvin-Voigt representation) to make the model stable under creep and stress relaxation and are excellent for describing viscoelastic polymer rheology. The SofaViscoElastic plugin presents 9 different viscoelastic models. For more theoretical information, users can refer to the paper "Considering the viscoelastic effects in soft robotic modeling" by Ferrentino et al., submitted in the Soft Robotic Journal (SORO). 
+They add another spring in parallel (Maxwell representation) or in series (Kelvin-Voigt representation) to make the model stable under creep and stress relaxation. They are excellent for describing viscoelastic polymer rheology. The SofaViscoElastic plugin presents nine different viscoelastic models. For more theoretical information, users can refer to the paper "Considering the viscoelastic effects in soft robotic modeling" by Ferrentino et al., submitted in the Soft Robotic Journal (SORO). 
 
 ## Visco-Hyperelasticity
-The visco-hyperelastic describes the mechanical behavior of the elastomers in large deformations. In this regime the hyperelasticity of the material is shown in parallel to the viscous effects, in particular, for this plugin:
+The visco-hyperelastic describes the mechanical behavior of the elastomers in large deformations. In this regime, the hyperelasticity of the material is shown in parallel to the viscous effects, in particular, for this plugin:
 
 ![Visco-hyperelastic models](./img/hyperelastic.png)
 
-
+Hence, it combines the hyperelastic models already implemented in Sofa with Maxwell Branches. The user can choose for each visco-hyperelastic model until the second order (two Maxwell branches in parallel).   
 
 ## Hysteresis
 The material models don't include hysteresis modeling, which will be added in future works.
 
 ## Installation
-This plugin is available for Ubuntu/Linux. Macintosh and Window. The only dependency is the SOFA plugin "SofaPython3" (make sure it is installed).
+This plugin is available for Ubuntu/Linux, Macintosh, and Windows. The only dependency is the SOFA plugin "SofaPython3" (make sure it is installed).
 To install this plugin from the source, the user has to download this folder and place it in:
 ```
  $ /home/adminName/sofa/src/applications/plugins
 ```
-Then the user has to write this in the CMakeLists.txt present in the previous destination:
+Then, the user has to write this in the CMakeLists.txt present in the previous destination:
 ```
 $ sofa_add_subdirectory(plugin SofaViscoElastic SofaViscoElastic)
 ```
 then recompile SOFA and it should start its installation. Enjoy!
-If you have any problems, please contact the author at pasquale.ferrentino@vub.be.
+If you have any problems, please get in touch with the author at pasquale.ferrentino@vub.be.
 
 ## Python Functions and Bindings
-The principal function of this plugin is the so-called TethrahedronViscoelasticityFEMForceField which applies the viscoelastic constitutive law to the tetrahedral mesh uploaded in SOFA, the syntax in Python is the following :
+The principal function of this plugin is the so-called TethrahedronViscoelasticityFEMForceField, which applies the viscoelastic constitutive law to the tetrahedral mesh uploaded in SOFA, the syntax in Python is the following :
 
 ![Python function](./img/img3.png)
 
@@ -65,19 +65,28 @@ The additional fields to fill in are:
   - MaxwellSecondOrder
   - KelvinVoigtSecondOrder
   - SLSMaxwellSecondOrder
-  - SLSKelvinVoigtSecondOrder 
-* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli ($E_i$) and the relaxation times ($&tau;_i$) defined as the ratio between the viscosity ($&eta;_i$) and the relative Young modulus. At the end, the user has to specify the Poisson Ratio (&nu;).
+  - SLSKelvinVoigtSecondOrder
+ (Visco-Hyperelasticity)
+  - SLSNeohookeanFirstOrder
+  - SLSNeohookeanSecondOrder
+  - SLSMooneyRivlinFirstOrder
+  - SLSMooneyRivlinSecondOrder
+  - SLSOgdenFirstOrder
+  - SLSOgdenSecondOrder
+  - SLSStableNeoHookeanFirstOrder
+  - SLSStableNeoHookeanSecondOrder
+* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli ($E_i$) and the relaxation times ($&tau;_i$) defined as the ratio between the viscosity ($&eta;_i$) and the relative Young modulus. Ultimately, the user must specify the Poisson Ratio (&nu;).
 
 
-For the simulation is strictly recommended to set the Rayleigh coefficient of the Solver to 0:
+For the simulation, it is strictly recommended to set the Rayleigh coefficient of the Solver to 0:
 
 ![Solver](./img/Solver.png)
 
-The simulation results are strictly dependent on the time step (dt), the author advises to use this range of time steps:
+The simulation results are strictly dependent on the time step (dt). The author advises to use this range of time steps:
 
 $$ dt \leq {&tau;_i \over 100} $$
   
-Furthermore in the plugin are integrated some Python Bindings to export some internal parameters of specific tetrahedrons:
+Furthermore, in the plugin are integrated some Python Bindings to export some internal parameters of specific tetrahedrons:
 
 ![Python Binding](./img/img4.png)
 
