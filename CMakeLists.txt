@@ -10,26 +10,38 @@ set(HEADER_FILES
     ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoelasticityFEMDrawing.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoelasticityFEMForceField.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoelasticityFEMForceField.inl
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoHyperelasticityFEMForceField.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoHyperelasticityFEMForceField.inl
+
+    ## VISCOELASTIC MATERIALS
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/BaseViscoelasticMaterial.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/MaxwellFirstOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/MaxwellSecondOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/SLSMaxwellSecondOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/KelvinVoigtFirstOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/KelvinVoigtSecondOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/SLSKelvinVoigtSecondOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/SLSKelvinVoigtFirstOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/SLSMaxwellFirstOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/Burgers.h
 
 
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/BaseViscoelasticMaterial.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/MaxwellFirstOrder.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/KelvinVoigtFirstOrder.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/SLSKelvinVoigtFirstOrder.h
-    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/SLSMaxwellFirstOrder.h
-        ${SOFAVISCOELASTIC_SOURCE_DIR}/material/Burgers.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/BaseViscoHyperelasticMaterial.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSNeoHookeanFirstOrder.h
+
 
 )
 
 set(SOURCE_FILES
     ${SOFAVISCOELASTIC_SOURCE_DIR}/init.cpp
     ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoelasticityFEMForceField.cpp
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/TetrahedronViscoHyperelasticityFEMForceField.cpp
+
     )
 
 find_package(Sofa.Simulation.Core REQUIRED)
 
 sofa_find_package(SofaPython3 QUIET)
-
 
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})

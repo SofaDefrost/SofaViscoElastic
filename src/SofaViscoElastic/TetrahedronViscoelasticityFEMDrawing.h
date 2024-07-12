@@ -115,13 +115,30 @@ void drawViscoelasticTets(const core::visual::VisualParams* vparams, const VecCo
         color3 = sofa::type::RGBAColor(1.0,1.0,0.0,1.0);
         color4 = sofa::type::RGBAColor(1.0,1.0,0.5,1.0);
     }
-    else {
+    else if (materialName =="MaxwellSecondOrder"){
         color1 = sofa::type::RGBAColor(0.0,1.0,0.0,1.0);
+        color2 = sofa::type::RGBAColor(0.5,0.5,0.0,1.0);
+        color3 = sofa::type::RGBAColor(0.5,1.0,0.0,1.0);
+        color4 = sofa::type::RGBAColor(1.0,1.0,0.5,1.0);
+    }
+    else if (materialName =="SLSMaxwellSecondOrder"){
+        color1 = sofa::type::RGBAColor(0.5,0.5,0.0,1.0);
         color2 = sofa::type::RGBAColor(0.5,1.0,0.0,1.0);
         color3 = sofa::type::RGBAColor(1.0,1.0,0.0,1.0);
         color4 = sofa::type::RGBAColor(1.0,1.0,0.5,1.0);
     }
-
+    else if (materialName =="SLSKelvinVoigtSecondOrder"){
+        color1 = sofa::type::RGBAColor(1.0,0.0,0.0,1.0);
+        color2 = sofa::type::RGBAColor(0.5,1.0,0.0,1.0);
+        color3 = sofa::type::RGBAColor(0.5,0.5,0.0,1.0);
+        color4 = sofa::type::RGBAColor(1.0,1.0,0.5,1.0);
+    }
+    else if (materialName =="KelvinVoigtSecondOrder"){
+        color1 = sofa::type::RGBAColor(1.0,0.5,0.0,1.0);
+        color2 = sofa::type::RGBAColor(1.0,0.5,0.0,1.0);
+        color3 = sofa::type::RGBAColor(1.0,0.5,0.0,1.0);
+        color4 = sofa::type::RGBAColor(1.0,1.0,0.5,1.0);
+    }       
     vparams->drawTool()->drawTriangles(points[0], color1);
     vparams->drawTool()->drawTriangles(points[1], color2);
     vparams->drawTool()->drawTriangles(points[2], color3);

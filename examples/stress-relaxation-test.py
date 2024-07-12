@@ -4,12 +4,10 @@ SofaRuntime.importPlugin("SofaComponentAll")
 # to add elements like Node or objects
 import Sofa.Core
 root = Sofa.Core.Node()
-import SofaViscoElastic
 import math 
 import numpy as np
 
 import os
-
 
 
 class CylinderController(Sofa.Core.Controller):
@@ -37,14 +35,15 @@ class CylinderController(Sofa.Core.Controller):
 
 
 
-	def onAnimateBeginEvent(self,event):
-		self.stress = self.node.cylinder.FEM.getCauchyStress(self.posmax1)
+	def onAnimateEndEvent(self,event):
+		self.stress = self.node.cylinder.FEM.CauchyStress[self.posmax1]
 		self.time = self.node.time.value
 		self.tau = self.node.cylinder.FEM.ParameterSet.value[2] 
 		epsilon = (self.node.cylinder.tetras.position.value[self.posmax1][2]-self.lin)/self.lin
 		print(self.stress[2]/1e6)
 
 
+## IN THIS CODE WE WILL DO A STRESS RELAXATION  TEST, SO WE WILL APPLY A STEP AS INPUT, USING THE POSITIONCONSTRAINT.
 
 
 
@@ -71,12 +70,13 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.Constraint.Lagrangian.Correction")
 	rootNode.addObject("RequiredPlugin", name = "Sofa.Component.Constraint.Projective")
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
+	rootNode.addObject('RequiredPlugin', name='SoftRobots') # Needed to use components [PositionConstraint]  
 
 
 	rootNode.addObject('FreeMotionAnimationLoop')
 	rootNode.addObject('GenericConstraintSolver', maxIterations=1e4, tolerance=1e-50)
-	rootNode.gravity = [0,0,-9.81]
-	rootNode.dt = (1e9/(20e9*1000))
+	rootNode.gravity = [0,-9810,0]
+	rootNode.dt = (1e9/(20e9*100))
 
 	rootNode.addObject('VisualStyle', displayFlags='hideForceFields')
 	rootNode.addObject('OglSceneFrame', style='Arrows', alignment='TopRight')	
@@ -101,15 +101,15 @@ def createScene(rootNode):
 	tau3 = 1e9/E3
 	nu = 0.44
 
-	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSMaxwellSecondOrder", ParameterSet= str(E1)+' '+str(E2)+' '+str(tau2)+' '+str(E3)+' '+str(tau3)+' '+str(nu))
+	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="MaxwellFirstOrder", ParameterSet= str(E1)+' '+str(tau1)+' '+str(nu))
 
 	cylinder.addObject('BoxROI', name='boxROI',box="-0.011 -0.011 -0.001  0.011 0.011 0.001", drawBoxes=True)
-	cylinder.addObject('FixedConstraint', indices = '@boxROI.indices')
-	cylinder.addObject('BoxROI', name="boxToPull", box=[-0.011, -0.011, 0.1, 0.011, 0.011, 0.101], drawBoxes=True)
-	cylinder.addObject('PartialFixedConstraint', indices=cylinder.boxToPull.indices.linkpath, fixedDirections=[1, 1, 0])
+	cylinder.addObject('FixedProjectiveConstraint', indices = '@boxROI.indices')
+	cylinder.addObject('BoxROI', name="boxToPull", box=[-0.011, -0.011, 0.1, 0.011, 0.011, 0.101], drawBoxes=False)
+	cylinder.addObject('PartialFixedProjectiveConstraint', indices=cylinder.boxToPull.indices.linkpath, fixedDirections=[1, 1, 0])
 
 ##	STEP SIGNAL 	
-	cylinder.addObject('PositionConstraint', name = 'displacement', indices=cylinder.boxToPull.indices.linkpath,valueType="displacement", value = 1e-4 , useDirections=[0, 0, 1])
+	cylinder.addObject('PositionConstraint', name = 'displacement', indices=cylinder.boxToPull.indices.linkpath,valueType="displacement", value = 1e-2 , useDirections=[0, 0, 1])
 	cylinder.addObject('LinearSolverConstraintCorrection')
 
 	cylinder.addObject(CylinderController(node=rootNode, pos = rootNode.cylinder.tetras.position))
@@ -118,7 +118,7 @@ def createScene(rootNode):
 
 	modelVisu3 = cylinder.addChild('visu')
 	modelVisu3.addObject('MeshSTLLoader', name='loader', filename='mesh/cylinder5296.stl', translation = [0.0,0.0,0.0])
-	modelVisu3.addObject('OglModel', src='@loader', color=[1,0.6,0,1])
+	modelVisu3.addObject('OglModel', src='@loader', color=[1,1,1,1])
 	modelVisu3.addObject('BarycentricMapping')
 
 	return rootNode

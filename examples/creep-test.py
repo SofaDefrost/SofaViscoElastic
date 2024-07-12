@@ -7,13 +7,11 @@ SofaRuntime.importPlugin("SofaComponentAll")
 # to add elements like Node or objects
 import Sofa.Core
 root = Sofa.Core.Node()
-import SofaViscoElastic
 import math 
 import numpy as np
 from scipy import signal
 
 import os
-
 
 class CylinderController(Sofa.Core.Controller):
 
@@ -36,6 +34,8 @@ class CylinderController(Sofa.Core.Controller):
 		print(self.posmax1)
 
 		self.lin = self.node.cylinder.tetras.position.value[self.posmax1][2]
+	
+
 
 
 
@@ -48,14 +48,15 @@ class CylinderController(Sofa.Core.Controller):
  
 
 ##	STEP SIGNAL 
-		self.node.cylinder.CFF.totalForce.value = [0, 0, ((3.141592653589793e2)/2)*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
+		self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e2/2))*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
 
-		#if(self.time >= 0.3):
-		#self.node.cylinder.CFF.totalForce.value = [0, 0, 0] ## amplitude in force calculated with Matlab --> Step function 
+		if(self.time >= 1):
+			self.node.cylinder.CFF.totalForce.value = [0, 0, 0] ## amplitude in force calculated with Matlab --> Step function 
 
 
 
 		print(epsilon*100)
+
 
 
 
@@ -87,7 +88,7 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
 
 
-	rootNode.gravity=[0,0,-9.81]
+	rootNode.gravity=[0,9.810,0]
 	rootNode.dt = (1e6/(20e6*100))
 	rootNode.name = 'rootNode'
 	rootNode.addObject('DefaultAnimationLoop', computeBoundingBox="0")
@@ -113,9 +114,10 @@ def createScene(rootNode):
 	cylinder.addObject('UniformMass', totalMass="1e-6", src = '@topo')
 
 	cylinder.addObject('BoxROI', name='boxROI1',box="-0.011 -0.011 -0.001  0.011 0.011 0.001", drawBoxes=True)
-	cylinder.addObject('FixedConstraint', indices = '@boxROI1.indices')
-	cylinder.addObject('BoxROI', name="boxToPull", box=[-0.011, -0.011, 0.1, 0.011, 0.011, 0.101], drawBoxes=False)
-	#cylinder.addObject('PartialFixedConstraint', indices=cylinder.boxToPull.indices.linkpath, fixedDirections=[0, 0, 0])
+
+	cylinder.addObject('FixedProjectiveConstraint', name = 'fix1', indices = '@boxROI1.indices')
+
+	cylinder.addObject('BoxROI', name="boxToPull", box=[-0.011, -0.011, 0.05, 0.011, 0.011, 0.051], drawBoxes=False)
 
 	E1 = 70e6
 	E2 = 20e6
@@ -123,7 +125,7 @@ def createScene(rootNode):
 	tau1 = 1e6/E1
 	tau2 = 1e6/E2
 	tau3 = 1e6/E3
-	nu = 0.44
+	nu = 0.44 ## Poisson's ratio
 	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSKelvinVoigtFirstOrder", ParameterSet= str(E1)+' '+str(E2)+' '+str(tau2)+' '+str(nu))
 	
 	cylinder.addObject('ConstantForceField', name = "CFF", listening = True, totalForce =[0,0,0],template="Vec3d", src= "@topo", indices = cylinder.boxToPull.indices.linkpath) 
@@ -133,7 +135,7 @@ def createScene(rootNode):
 
 	modelVisu3 = cylinder.addChild('visu')
 	modelVisu3.addObject('MeshSTLLoader', name='loader', filename='mesh/cylinder5296.stl', translation = [0.0,0.0,0.0])
-	modelVisu3.addObject('OglModel', src='@loader', color=[0,0,1,1])
+	modelVisu3.addObject('OglModel', src='@loader', color=[1,1,1,1])
 	modelVisu3.addObject('BarycentricMapping')
 
 
