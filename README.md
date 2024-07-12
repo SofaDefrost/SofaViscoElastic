@@ -3,13 +3,14 @@
 
 ## Table of contents
 * [Introduction](#introduction)
+* [Visco-Hyperelasticity](#viscohyperelasticity)
 * [Installation](#installation)
 * [Python Functions and Bindings](#python-functions-and-bindings)
 * [Algorithm](#algorithm)
 * [Applications](#applications)
 
 ## Introduction
-SofaViscoElastic is a Software Open Architecture Framework (SOFA) plugin, which implements the fundamental linear viscoelastic constitutive laws applied to tetrahedral meshes.
+SofaViscoElastic is a Software Open Architecture Framework (SOFA) plugin, which implements the fundamental linear viscoelastic and visco-hyperelastic constitutive laws applied to tetrahedral meshes.
 Viscoelasticity is a property of elastomeric materials that influences their mechanical behavior under dynamic conditions. Viscoelastic constitutive equations are dependent on the stress/strain rate. At low stress/strain rates, a viscoelastic material behaves like a viscous liquid-like material, while at high stress/strain rates, the same material behaves like a Hookean solid. The simplest viscoelastic models are:
 
 ![Basic Models](./img/img1.png)
@@ -23,11 +24,17 @@ To describe their viscoelastic properties, different viscoelastic models have to
 
 They add another spring in parallel (Maxwell representation) or in series (Kelvin-Voigt representation) to make the model stable under creep and stress relaxation and are excellent for describing viscoelastic polymer rheology. The SofaViscoElastic plugin presents 9 different viscoelastic models. For more theoretical information, users can refer to the paper "Considering the viscoelastic effects in soft robotic modeling" by Ferrentino et al., submitted in the Soft Robotic Journal (SORO). 
 
+## Visco-Hyperelasticity
+The visco-hyperelastic describes the mechanical behavior of the elastomers in large deformations. In this regime the hyperelasticity of the material is shown in parallel to the viscous effects, in particular, for this plugin:
+
+
+
+
 ## Hysteresis
 The material models don't include hysteresis modeling, which will be added in future works.
 
 ## Installation
-This plugin is available only for Ubuntu/Linux OS. The only dependency is the SOFA plugin "SofaPython3" (make sure it is installed).
+This plugin is available for Ubuntu/Linux. Macintosh and Window. The only dependency is the SOFA plugin "SofaPython3" (make sure it is installed).
 To install this plugin from the source, the user has to download this folder and place it in:
 ```
  $ /home/adminName/sofa/src/applications/plugins
@@ -48,6 +55,7 @@ The additional fields to fill in are:
 * template: related to the DOF expressed in the Mechanical Object in SOFA.
 * name: The name chosen by the user for the function (will appear in the SOFA simulation Graph)
 * materialname: The name of the viscoelastic model that the user wants to use, he can choose between:
+  (Linear Viscoelasticity)
   - MaxwellFirstOrder
   - KelvinVoigtFirstOrder
   - SLSMaxwellFirstOrder
