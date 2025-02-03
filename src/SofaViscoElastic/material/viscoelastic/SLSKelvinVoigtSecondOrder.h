@@ -81,12 +81,14 @@ public:
         Real tau2 = param.parameterArray[2];
         Real E3 = param.parameterArray[3];        
         Real tau3 = param.parameterArray[4];
+        Real nu=param.parameterArray[5];        
 
         MatrixSym inversematrix;
         invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
         
+        Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
 
 
         /// The algorithm consist into define for any model the strain that is acting on each dashpot present in the model, called Eviscous (Evisc in the code)
@@ -96,7 +98,7 @@ public:
         
 
         /// The equation of the Cauchy Stress tensor for the Maxwell Model.
-        CauchyStressTensor = E1*(sinfo->E-sinfo->Evisc1-sinfo->Evisc2);
+        CauchyStressTensor = E1*(sinfo->E-sinfo->Evisc1-sinfo->Evisc2)+(E1/(3*(1-2*nu)))*trE*ID;
 
         /// Store the viscous strain every time step.
         sinfo->Evisc_prev1 = sinfo->Evisc1;
@@ -120,6 +122,7 @@ public:
         invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
+        Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
 
 
         Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]

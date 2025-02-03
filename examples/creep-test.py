@@ -12,6 +12,7 @@ import numpy as np
 from scipy import signal
 
 import os
+path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
 
 class CylinderController(Sofa.Core.Controller):
 
@@ -35,28 +36,33 @@ class CylinderController(Sofa.Core.Controller):
 
 		self.lin = self.node.cylinder.tetras.position.value[self.posmax1][2]
 	
-
+		file1 = open(path + "SLS_Maxwell_cyclic1.txt","w")
+		file1.write(str(0.0)+' '+str(0.0)+' '+str(0.0) +'\n')
+		file1.close()
 
 
 
 	def onAnimateBeginEvent(self,event):
 		self.time = self.node.time.value
-		self.tau = self.node.cylinder.FEM.ParameterSet.value[2] 
+		#self.tau = self.node.cylinder.FEM.ParameterSet.value[2] 
 		epsilon = (self.node.cylinder.tetras.position.value[4][2]-self.lin)/self.lin
 
 ## IN THIS CODE WE WILL DO A CREEP TEST, SO WE WILL APPLY A STEP AS INPUT, USING THE CONSTANTFORCEFIELD LOAD.
  
-
 ##	STEP SIGNAL 
 		self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e2/2))*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
+## Ramp
 
-		if(self.time >= 1):
-			self.node.cylinder.CFF.totalForce.value = [0, 0, 0] ## amplitude in force calculated with Matlab --> Step function 
+		#self.node.cylinder.CFF.totalForce.value =  [0,0,((3.141592653589793e2/2))*(1-abs(signal.sawtooth(2 * np.pi*7*self.time)))]## amplitude in force calculated with Matlab 
+		#if(self.time>=0.1):
+		#	self.node.cylinder.CFF.totalForce.value =  [0,0,((3.141592653589793e2/2))]## amplitude in force calculated with Matlab 
 
 
 
 		print(epsilon*100)
-
+		#file1 = open(path + "SLS_Maxwell_cyclic1.txt","a")
+		#file1.write(str(self.time)+' '+str(self.node.cylinder.FEM.stressVonMisesElement.value[4])+' '+str(epsilon*100)+ '\n' )
+		#file1.close()
 
 
 
@@ -92,7 +98,7 @@ def createScene(rootNode):
 	rootNode.dt = (1e6/(20e6*100))
 	rootNode.name = 'rootNode'
 	rootNode.addObject('DefaultAnimationLoop', computeBoundingBox="0")
-	rootNode.addObject('GenericConstraintSolver', tolerance=1e-24, maxIterations=100000000)
+	rootNode.addObject('GenericConstraintSolver', tolerance=1e-24, maxIterations=1000)
 	rootNode.addObject('OglSceneFrame', style='Arrows', alignment='TopRight')
 
 
@@ -104,7 +110,7 @@ def createScene(rootNode):
 
 	cylinder.addObject('EulerImplicitSolver', name="Solver",rayleighMass = 0.0, rayleighStiffness = 0.0, firstOrder = True, trapezoidalScheme = False)
 
-	cylinder.addObject('CGLinearSolver', name="ItSolver", iterations="25000000", tolerance="1e-15", threshold = '1e-30')
+	cylinder.addObject('CGLinearSolver', name="ItSolver", iterations="2500", tolerance="1e-30", threshold = '1e-12')
 	cylinder.addObject('MeshVTKLoader', name='loader', filename='mesh/cylinder5296.vtk', translation = [0, 0.0, 0])
 	cylinder.addObject('MechanicalObject', name='tetras', template='Vec3d', src = '@loader')
 	cylinder.addObject('TetrahedronSetTopologyContainer', name="topo", src ='@loader')
@@ -126,7 +132,8 @@ def createScene(rootNode):
 	tau2 = 1e6/E2
 	tau3 = 1e6/E3
 	nu = 0.44 ## Poisson's ratio
-	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSKelvinVoigtFirstOrder", ParameterSet= str(E1)+' '+str(E2)+' '+str(tau2)+' '+str(nu))
+	#cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSMaxwellFirstOrder", ParameterSet= str(E1)+' '+str(E2)+' '+str(tau2)+' '+str(nu))
+	cylinder.addObject('TetrahedronFEMForceField', template='Vec3d', name='FEM', src ='@topo',youngModulus = E1, poissonRatio = nu)
 	
 	cylinder.addObject('ConstantForceField', name = "CFF", listening = True, totalForce =[0,0,0],template="Vec3d", src= "@topo", indices = cylinder.boxToPull.indices.linkpath) 
 	

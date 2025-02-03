@@ -74,17 +74,20 @@ public:
         Real E0=param.parameterArray[0];
         Real E1=param.parameterArray[1];
         Real tau=param.parameterArray[2];
+        Real nu=param.parameterArray[3];        
+
         MatrixSym inversematrix;
         invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
+        Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
 
         /// Calculation Viscous strain
         sinfo->Evisc1 = (1/(1+(((E0*dt)/(E1*tau))+(dt/tau))))*(sinfo->Evisc_prev1+((E0*dt)/(E1*tau))*sinfo->E);
 
 
         /// The equation of the Cauchy Stress tensor for the SLS Kelvin Model.
-        CauchyStressTensor = E0*(sinfo->E-sinfo->Evisc1); 
+        CauchyStressTensor = E0*(sinfo->E-sinfo->Evisc1)+((E0)/(3*(1-2*nu)))*trE*ID; 
 
         /// store the viscous strain every time step
         sinfo->Evisc_prev1 = sinfo->Evisc1;

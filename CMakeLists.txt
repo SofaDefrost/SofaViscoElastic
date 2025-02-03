@@ -24,10 +24,18 @@ set(HEADER_FILES
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/SLSKelvinVoigtFirstOrder.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/SLSMaxwellFirstOrder.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/Burgers.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscoelastic/LinearElastic.h
 
-
+    ## VISCOHYPERELASTIC MATERIALS 
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/BaseViscoHyperelasticMaterial.h
     ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSNeoHookeanFirstOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSNeoHookeanSecondOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSStableNeoHookeanFirstOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSStableNeoHookeanSecondOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSMooneyRivlinFirstOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSMooneyRivlinSecondOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSOgdenFirstOrder.h
+    ${SOFAVISCOELASTIC_SOURCE_DIR}/material/viscohyperelastic/SLSOgdenSecondOrder.h
 
 
 )

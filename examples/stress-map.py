@@ -8,6 +8,7 @@ import math
 import numpy as np
 
 import os
+path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
 
 
 class CylinderController(Sofa.Core.Controller):

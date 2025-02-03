@@ -8,6 +8,7 @@ import math
 import numpy as np
 
 import os
+path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
 
 
 class CylinderController(Sofa.Core.Controller):
@@ -32,6 +33,9 @@ class CylinderController(Sofa.Core.Controller):
 
 		self.lin = self.node.cylinder.tetras.position.value[self.posmax1][2]
 	
+		file1 = open(path + "SLS_Maxwell_relaxation.txt","w")
+		file1.write(str(0.0)+' '+str(0.0)+' '+str(0.0) +'\n')
+		file1.close()
 
 
 
@@ -44,7 +48,9 @@ class CylinderController(Sofa.Core.Controller):
 
 
 ## IN THIS CODE WE WILL DO A STRESS RELAXATION  TEST, SO WE WILL APPLY A STEP AS INPUT, USING THE POSITIONCONSTRAINT.
-
+		file1 = open(path + "SLS_Maxwell_relaxation.txt","a")
+		file1.write(str(self.time)+' '+str(epsilon*100)+' '+str(self.stress[2]/1e6) +'\n' )
+		file1.close()
 
 
 def createScene(rootNode):

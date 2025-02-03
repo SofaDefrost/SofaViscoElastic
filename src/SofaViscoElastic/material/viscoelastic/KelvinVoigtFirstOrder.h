@@ -73,11 +73,14 @@ public:
     virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
     {
         Real E1=param.parameterArray[0];
+        Real tau=param.parameterArray[1];
+        Real nu=param.parameterArray[2];        
         MatrixSym inversematrix;
         invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
 
         ID.identity();
+        Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
 
         /// Calculation Viscous strain
 
@@ -88,7 +91,7 @@ public:
         CauchyStressTensor = E1*sinfo->Evisc1;
         
         /// Store the viscous strain every time step.
-        sinfo->Evisc_prev1 = sinfo->Evisc1;
+        sinfo->Evisc_prev1 = sinfo->Evisc1+((E1)/(3*(1-2*nu)))*trE*ID;
               
         /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
         SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);

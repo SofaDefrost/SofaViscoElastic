@@ -80,10 +80,13 @@ public:
 		Real tau1 = param.parameterArray[1];
 		Real E2 = param.parameterArray[2];
 		Real tau2 = param.parameterArray[3];
+		Real nu = param.parameterArray[4];
+
 		MatrixSym inversematrix;
 		invertMatrix(inversematrix,sinfo->C);
 		MatrixSym ID;
 		ID.identity();
+    Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
 
 
         // Calculation Viscous strain rate
@@ -94,7 +97,7 @@ public:
 
     
         /// The equation of the Cauchy-Green Stress tensor for the Maxwell Model.
-        CauchyStressTensor = ((E1*E2)/(E1+E2))*(sinfo->Evisc2);
+        CauchyStressTensor = ((E1*E2)/(E1+E2))*(sinfo->Evisc2)+((E1*E2/(E1+E2))/(3*(1-2*nu)))*trE*ID;
 
         /// Store the viscous strain every time step.
         sinfo->Evisc_prev2 = sinfo->Evisc2;

@@ -45,6 +45,7 @@
 #include <SofaViscoElastic/material/viscoelastic/SLSMaxwellSecondOrder.h>
 #include <SofaViscoElastic/material/viscoelastic/KelvinVoigtSecondOrder.h>
 #include <SofaViscoElastic/material/viscoelastic/SLSKelvinVoigtSecondOrder.h>
+#include <SofaViscoElastic/material/viscoelastic/LinearElastic.h>
 
 
 #include <sofa/core/visual/VisualParams.h>
@@ -68,7 +69,9 @@ const helper::OptionsGroup materialOptions {
     SLSKelvinVoigtSecondOrder<DataTypes>::Name,
     MaxwellSecondOrder<DataTypes>::Name,
     KelvinVoigtSecondOrder<DataTypes>::Name,
-    Burgers<DataTypes>::Name
+    Burgers<DataTypes>::Name,
+    LinearElastic<DataTypes>::Name
+
 };
 
 
@@ -144,11 +147,16 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::instantiateMaterial()
     {        
 
         m_myMaterial = std::make_unique<SLSKelvinVoigtSecondOrder<DataTypes>>();
-    }                  
+    } 
+    else if (material == LinearElastic<DataTypes>::Name)
+    {        
+
+        m_myMaterial = std::make_unique<LinearElastic<DataTypes>>();
+    }                    
     else
     {
         msg_error() << "material name " << material <<
-            " is not valid (should be MaxwellFirstOrder, SLSMaxwellFirstOrder, KelvinVoigtFirstOrder, SLSKelvinVoigtFirstOrder, Burgers, MaxwellSecondOrder, SLSMaxwellSecondOrder, KelvinVoigtSecondOrder, SLSKelvinVoigtSecondOrder)";
+            " is not valid (should be SLSMaxwellFirstOrder1,MaxwellFirstOrder, SLSMaxwellFirstOrder, KelvinVoigtFirstOrder, SLSKelvinVoigtFirstOrder, Burgers, MaxwellSecondOrder, SLSMaxwellSecondOrder, KelvinVoigtSecondOrder, SLSKelvinVoigtSecondOrder)";
     }
 
     if (m_myMaterial)
