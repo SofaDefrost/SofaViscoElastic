@@ -71,38 +71,29 @@ public:
     typedef type::MatSym<3, Real> MatrixSym;
 
 
-    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, MatrixSym &CauchyStressTensor, SReal& dt) override
+    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, SReal& dt) override
     {
         MatrixSym inversematrix;
         MatrixSym C = sinfo->C;
-        MatrixSym E = sinfo->E;
         invertMatrix(inversematrix, C);
         Real I1 = sinfo->trC;
         Real I1square = (Real)(C[0]*C[0]+C[2]*C[2]+C[5]*C[5]+2*(C[1]*C[1]+C[3]*C[3]+C[4]*C[4]));
         Real I2 = (Real)((pow(I1, (Real)2)-I1square)/2);
         Real c1 = param.parameterArray[0];
         Real c2 = param.parameterArray[1];
-        Real E1 = param.parameterArray[2];
+        Real G1 = param.parameterArray[2];
         Real tau = param.parameterArray[3];
         Real k0 = param.parameterArray[4];
         MatrixSym ID;
         ID.identity();
 
         /// Calculation Viscous strain 
-        sinfo->Evisc1 = (1/(1+(dt/tau)))*(sinfo->Evisc_prev1+ (dt/tau)*sinfo->E);
-
-        // C-1:Evisc_previous_step
-        MatrixSym P; 
-        P.Mat2Sym(inversematrix.SymSymMultiply(sinfo->Evisc_prev1),P);
+        sinfo->Evisc1 = (1 / (1 + ( tau / dt ))) * (( tau / dt ) * sinfo->Evisc_prev1 + sinfo->E);
 
 
 
-        SPKTensorGeneral = (-1*inversematrix*I1/3+ID)*(2*c1*pow(sinfo->J, (Real)(-2.0/3.0)))+(
-                               -1*inversematrix*2*I2/3+ID*I1-C)*(
-                               2*c2*pow(sinfo->J, (Real)(-4.0/3.0)))+inversematrix*(k0*log(sinfo->J)
-                               -0.5*(E1/(1+(dt/tau))))+0.5*(E1/(1+(dt/tau)))*ID -(E1/(1+(dt/tau)))*P;
 
-
+        SPKTensorGeneral = (-1*inversematrix*I1/3+ID)*(2*c1*pow(sinfo->J, (Real)(-2.0/3.0)))+(-1*inversematrix*2*I2/3+ID*I1-C)*(2*c2*pow(sinfo->J, (Real)(-4.0/3.0)))+inversematrix*(k0*log(sinfo->J)) + 2 * G1 * (sinfo->E - sinfo->Evisc1)  ;
 
 
         /// store the viscous strain every time step
@@ -122,7 +113,7 @@ public:
         Real I2 = (Real)((pow(I1, (Real)2)-I1square)/2);
         Real c1 = param.parameterArray[0];
         Real c2 = param.parameterArray[1];
-        Real E1 = param.parameterArray[2];
+        Real G1 = param.parameterArray[2];
         Real tau = param.parameterArray[3];
         Real k0 = param.parameterArray[4];
         MatrixSym ID;
@@ -149,7 +140,7 @@ public:
                          3.0+Firstmatrix*(Real)2.0*I2/(Real)3.0-inversematrix*(Real)2.0*(
                              I1*trH-trHC)/(Real)3.0+ID*trH-inputTensor)*(Real)2.0*c2*pow(
                            sinfo->J, (Real)(-4.0/3.0))
-                       +inversematrix*_trHC*k0/(Real)2.0-Firstmatrix*k0*log(sinfo->J)+Firstmatrix*E1*exp(-dt/tau);          
+                       +inversematrix*_trHC*k0/(Real)2.0-Firstmatrix*k0*log(sinfo->J);          
 
     }
 

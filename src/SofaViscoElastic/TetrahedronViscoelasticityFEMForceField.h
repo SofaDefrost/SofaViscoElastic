@@ -111,8 +111,6 @@ public:
         /// current tetrahedron volume
         Real m_volScale{};
         Real m_volume{};
-        /// Second Piola Kirchhoff stress tensor 
-        MatrixSym m_SPKTensorGeneral;
 
         /// Cauchy Green stress Tensor 
         MatrixSym m_CauchyStressTensor;
@@ -121,7 +119,6 @@ public:
         Real m_VonMisesStress;
 
         /// to export the stresses with Python Binding
-        Vec6 m_SPKStress;
         Vec6 m_CauchyStress;
 
         /// deformation gradient = gradPhi
@@ -164,7 +161,6 @@ protected:
 
     TetrahedronData<sofa::type::vector<TetrahedronRestInformation> > m_tetrahedronInfo; ///< Internal tetrahedron data
     EdgeData<sofa::type::vector<EdgeInformation> > m_edgeInfo; ///< Internal edge data
-    Data<vector<Vec6d> > d_stressSPK;
     Data<vector<Vec6d> > d_Cauchystress;
     Data<vector<Real> > d_stressVonMisesElement;
     Data<vector<Real> > d_stressVonMisesNode;

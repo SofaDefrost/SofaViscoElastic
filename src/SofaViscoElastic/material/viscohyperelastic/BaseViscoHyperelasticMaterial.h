@@ -73,7 +73,7 @@ public:
   };
 
   /** computes the second Piola Kirchhoff stress tensor of the current configuration */
-   virtual void deriveSPKTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,MatrixSym &,MatrixSym &, SReal&)  = 0;
+   virtual void deriveSPKTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,MatrixSym &, SReal&)  = 0;
 
   /** computes the Elasticity Tensor of the current configuration */
    virtual void applyElasticityTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,const MatrixSym& , MatrixSym &, SReal&)  = 0;

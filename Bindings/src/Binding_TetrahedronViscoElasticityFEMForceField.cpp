@@ -95,13 +95,6 @@ py::object getF(Myclass& self, int i)
     return pybind11::cast(tmp);
 }
 
-//Vec 6
-py::object getSPKStress(Myclass& self, int i)
-{
-    auto tmp = self.m_tetrahedronInfo.getValue()[i].m_SPKStress;
-
-    return pybind11::cast(tmp);
-}
 
 //Vec 6
 py::object getCauchyStress(Myclass& self, int i)
@@ -134,7 +127,6 @@ void moduleAddTetrahedronViscoelasticityFEMForceField(py::module &m)
     p.def("getRestVolume", getRestVolume, "get the rest volume of a tetrahedron");
     p.def("getVolScale", getVolScale, "get the volume Scale of a tetrahedron");
     p.def("getF", getF, "get the deformation gradient of a tetrahedron");
-    p.def("getSPKStress", getSPKStress, "get the Second Piola Kirchhoff Stresses of a tetrahedron");
     p.def("getCauchyStress", getCauchyStress, "get the Cauchy Stresses of a tetrahedron");
     p.def("getVonMisesStress", getVonMisesStress, "get the Von Mises Stresses of a tetrahedron");
 

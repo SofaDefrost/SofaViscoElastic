@@ -74,68 +74,80 @@ public:
     typedef type::Mat<3,3,Real> Matrix3;
     typedef type::MatSym<3,Real> MatrixSym;
 
-    virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param, MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
+    virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param, MatrixSym &SPKTensorGeneral, SReal& dt) override
     {
 
         Real mu = param.parameterArray[0];
-        Real lambda = param.parameterArray[1];
-        Real E2 = param.parameterArray[2];
-        Real tau2 = param.parameterArray[3];
-        Real E3 = param.parameterArray[4];
-        Real tau3 = param.parameterArray[5];
+        Real G1 = param.parameterArray[1];
+        Real tau1 = param.parameterArray[2];
+        Real G2 = param.parameterArray[3];
+        Real tau2 = param.parameterArray[4];
+        Real lambda = param.parameterArray[5];
 
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
+
         MatrixSym ID;
         ID.identity();
         
-        Real J = sinfo->J;
-        Real beta = 1 + mu/(lambda+mu);
-        /// The algorithm consist into define for any model the strain that is acting on each dashpot present in the model, called Eviscous (Evisc in the code)
+ // right Cauchy-Green deformation tensor
+        const auto& C = sinfo->C;
 
-        sinfo->Evisc1 = (1/(1+(dt/tau2)))*(sinfo->Evisc_prev1 + (dt/tau2)*sinfo->E);
-        sinfo->Evisc2 = (1/(1+(dt/tau3)))*(sinfo->Evisc_prev2 + (dt/tau3)*sinfo->E);
-        
+        // Inverse of C
+        MatrixSym C_1;
+        invertMatrix(C_1, C);
+
+
+        //rest stabilization term
+        const Real alpha = 1 + mu / (lambda + mu);
+
+        //Relative volume change -> J = det(F)
+        const Real J = sinfo->J;
+
+        sinfo->Evisc1 = (1 / (1 + ( tau1 / dt ))) * (( tau1 / dt )* sinfo->Evisc_prev1 + sinfo->E);           
+        sinfo->Evisc2 = (1 / (1 + ( tau2 / dt ))) * (( tau2 / dt )* sinfo->Evisc_prev2 + sinfo->E);           
 
         /// The equation of the Cauchy Stress tensor for the Maxwell Model with the Neo-Hookean spring working in parallel.
-        CauchyStressTensor = mu * (2*sinfo->E + ID) + (lambda + mu) * J * (J - beta) * ID + E2 * (sinfo->E - sinfo->Evisc1) + E3 * (sinfo->E - sinfo->Evisc2);
+        //Second Piola-Kirchoff stress tensor is written in terms of C:
+        // PK2 = 2 * dW/dC
+        SPKTensorGeneral = mu * ID + ((lambda + mu) * J * (J - alpha)) * C_1 + 2 * G1 * (sinfo->E - sinfo->Evisc1) + 2 * G1 * (sinfo->E - sinfo->Evisc2);
 
         /// Store the viscous strain every time step.
         sinfo->Evisc_prev1 = sinfo->Evisc1;
         sinfo->Evisc_prev2 = sinfo->Evisc2;
         
-        /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
-        SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
+
     }
 
     virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
       {
 
         Real mu = param.parameterArray[0];
-        Real lambda = param.parameterArray[1];
-        Real E2 = param.parameterArray[2];
-        Real tau2 = param.parameterArray[3];
-        Real E3 = param.parameterArray[4];
-        Real tau3 = param.parameterArray[5];
+        Real G1 = param.parameterArray[1];
+        Real tau1 = param.parameterArray[2];
+        Real G2 = param.parameterArray[3];
+        Real tau2 = param.parameterArray[4];
+        Real lambda = param.parameterArray[4];
 
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
-        MatrixSym ID;
-        ID.identity();
+        //rest stabilization term
+        const Real alpha = 1 + mu / (lambda + mu);
 
-        Real J = sinfo->J;
-        Real beta = 1 + mu/(lambda+mu);
+        //Relative volume change -> J = det(F)
+        const Real J = sinfo->J;
 
-        Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
+        // inverse of the right Cauchy-Green deformation tensor
+        MatrixSym inverse_C;
+        sofa::type::invertMatrix(inverse_C, sinfo->C);
 
+        // trace(C^-1 * H)
+        Real trHC = inputTensor[0] * inverse_C[0] + inputTensor[2] * inverse_C[2] + inputTensor[5] * inverse_C[5]
+                + 2 * inputTensor[1] * inverse_C[1] + 2 * inputTensor[3] * inverse_C[3] + 2 *
+                inputTensor[4] * inverse_C[4];
 
+        // C^-1 * H * C^-1
+        MatrixSym Firstmatrix;
+        MatrixSym::Mat2Sym(inverse_C * (inputTensor * inverse_C), Firstmatrix);
 
-        MatrixSym Thirdmatrix;
-        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
-
-        outputTensor = 0.5 * (lambda + mu) * (Thirdmatrix * (-2 * J * (J - beta)) + inversematrix * (J * (2 * J - beta) * trHC)) + 0.5*Thirdmatrix*(E2*exp(-t/tau2)+E3*exp(-t/tau3));
-
+        outputTensor = 0.5 * (lambda + mu) * (Firstmatrix * (-2 * J * (J - alpha))
+            + inverse_C * (J * (2 * J - alpha) * trHC));
 
 
     }

@@ -50,12 +50,6 @@ namespace sofa::SofaViscoElastic::material
 The material is described based on continuum mechanics and the description is independent
 to any discretization method like the finite element method.
 
-For the explanation of the algorithm, the user can see the documentation on this two links:
-
-FEniCS : https://comet-fenics.readthedocs.io/en/latest/demo/viscoelasticity/linear_viscoelasticity.html
-
-COMSOL: https://doc.comsol.com/5.5/doc/com.comsol.help.sme/sme_ug_theory.06.26.html 
-
 */  
 
 
@@ -70,53 +64,39 @@ public:
     typedef type::Mat<3,3,Real> Matrix3;
     typedef type::MatSym<3,Real> MatrixSym;
 
-    virtual void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
+    virtual void deriveCauchyGreenStressTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &CauchyStressTensor, SReal& dt) override
     {
-        Real E1=param.parameterArray[0];
-        Real tau=param.parameterArray[1];
-        Real nu=param.parameterArray[2];        
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
+        Real G1=param.parameterArray[0];
+        Real tau = param.parameterArray[1];        
+        Real lambda = param.parameterArray[2];
+
         MatrixSym ID;
 
         ID.identity();
-        Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
-
-        /// Calculation Viscous strain
-
-        sinfo-> Evisc1 = sinfo->E;
-
-
+        // viscous strain of Kelvin Voigt
+        sinfo->Evisc1 = sinfo->E;
         /// The equation of the Cauchy Stress tensor for the Kelvin Voigt Model.
-        CauchyStressTensor = E1*sinfo->Evisc1;
-        
+        CauchyStressTensor = 2 * G1 * sinfo->Evisc1 + 2 * G1 * (tau/dt) * (sinfo->Evisc1 - sinfo->Evisc_prev1) + lambda * sinfo->trE * ID;
+
         /// Store the viscous strain every time step.
-        sinfo->Evisc_prev1 = sinfo->Evisc1+((E1)/(3*(1-2*nu)))*trE*ID;
-              
-        /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
-        SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
+
+        sinfo->Evisc_prev1 = sinfo->Evisc1;                              
+
     }
 
     virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
      {
-        Real E1=param.parameterArray[0];
-        Real tau=param.parameterArray[1];
-        Real nu=param.parameterArray[2];
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
+        Real G1 = param.parameterArray[0];
+        Real lambda = param.parameterArray[1];
+        Real tau = param.parameterArray[2];
+
         MatrixSym ID;
         ID.identity();
 
-        Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
+        const Real trH = sofa::type::trace(inputTensor);
 
-
-
-        MatrixSym Thirdmatrix;
-
-        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
-
-        outputTensor = Thirdmatrix*(0.5*E1-E1/(3*(1-2*nu))*log(sinfo->J)*0.5)+ inversematrix*(E1/(3*(1-2*nu)))*trHC*0.5;
+        // The 4th order tensor of elasticity is always approximated to the one in case of pure Linear elasticity (Long-term elasticity tensor) 
+        outputTensor = ID * (trH * lambda / 2.0) + inputTensor * G1;
 
 
     }

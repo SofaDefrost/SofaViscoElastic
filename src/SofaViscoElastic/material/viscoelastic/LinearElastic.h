@@ -73,30 +73,19 @@ public:
     typedef type::MatSym<3,Real> MatrixSym;
 
 
-    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, MatrixSym &CauchyStressTensor, SReal& dt) override
+    void deriveCauchyGreenStressTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param, MatrixSym &CauchyStressTensor, SReal& dt) override
     {
-        Real E0=param.parameterArray[0];
-        Real nu=param.parameterArray[1];
+        Real mu = param.parameterArray[0];
+        Real lambda = param.parameterArray[1];
 
-
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
-        Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
 
+       
+        // the equation in 3D uses  the lame' parameters, in the equation is considered the transformation from (E, nu) to (mu, lambda) which are the Lame' parameters
+        // The equation is always  sigma =  2 * mu * E + lambda * trE * ID
 
-        CauchyStressTensor = E0*sinfo->E+ ((E0)/(3*(1-2*nu)))*trE*ID;
-
-
-        /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
-        SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
-
-
-
-        /// store the viscous strain, the strain rate and the total strain every time step
-        sinfo->Evisc_prev1 = sinfo->Evisc1;   
-
+        CauchyStressTensor = 2 * mu * sinfo->E + lambda* sinfo->trE * ID;
 
 
     }
@@ -104,27 +93,16 @@ public:
     void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
 
     {
-        Real E0=param.parameterArray[0];
-        Real nu=param.parameterArray[1];
+        Real mu = param.parameterArray[0];
+        Real lambda = param.parameterArray[1];
 
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
 
-        Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
 
+        const Real trH = sofa::type::trace(inputTensor);
 
-        Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
-
-
-
-        MatrixSym Thirdmatrix;
-        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
- 
-
-        outputTensor = Thirdmatrix*(0.5*E0-((E0)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E0)/(3*(1-2*nu)))*trHC*0.5;
+        outputTensor = ID * (trH * lambda / 2.0) + inputTensor * mu;
 
     }
 

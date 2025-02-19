@@ -76,36 +76,39 @@ public:
     typedef type::MatSym<3,Real> MatrixSym;
 
 
-    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, MatrixSym &CauchyStressTensor, SReal& dt) override
+    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, SReal& dt) override
     {
         //Lame' constant
-        Real mu=param.parameterArray[0];
-        Real lambda=param.parameterArray[1];
+        Real mu = param.parameterArray[0];
+        Real G1 = param.parameterArray[1];
+        Real tau = param.parameterArray[2];
+        Real lambda = param.parameterArray[3];
 
-        Real E1=param.parameterArray[2];
-        Real tau=param.parameterArray[3];
 
-
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
         
-        Real J = sinfo->J;
-        Real beta = 1 + mu/(lambda+mu);
+ // right Cauchy-Green deformation tensor
+        const auto& C = sinfo->C;
 
-        /// Calculation Viscous strain 
-        sinfo->Evisc1 = (1/(1+(dt/tau)))*(sinfo->Evisc_prev1+ (dt/tau)*sinfo->E);
+        // Inverse of C
+        MatrixSym C_1;
+        invertMatrix(C_1, C);
+
+        //rest stabilization term
+        const Real alpha = 1 + mu / (lambda + mu);
+
+        //Relative volume change -> J = det(F)
+        const Real J = sinfo->J;
+
+        sinfo->Evisc1 = (1 / (1 + ( tau / dt ))) * (( tau / dt )* sinfo->Evisc_prev1 + sinfo->E);   
 
 
-        /// The equation of the Cauchy Stress tensor for the SLS NeoHookean Model with the Neo-hookean spring working in parallel.
-        CauchyStressTensor = mu*(2*sinfo->E + ID) + (lambda + mu) * J * (J-beta) * ID + (E1/(1+(dt/tau)))*sinfo->E  - (E1/(1+(dt/tau)))*sinfo->Evisc_prev1;
+        //Second Piola-Kirchoff stress tensor is written in terms of C:
+        // PK2 = 2 * dW/dC
+        SPKTensorGeneral = mu * ID + ((lambda + mu) * J * (J - alpha)) * C_1 + 2 * G1 * (sinfo->E - sinfo->Evisc1);
 
-        /// store the viscous strain every time step
         sinfo->Evisc_prev1 = sinfo->Evisc1;
-
-        /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
-        SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
 
     }
 
@@ -113,18 +116,17 @@ public:
 
     {
         // Lame' Constant
-        Real mu=param.parameterArray[0];
-        Real lambda=param.parameterArray[1];
-
-        Real E1=param.parameterArray[2];
-        Real tau=param.parameterArray[3];
+        Real mu = param.parameterArray[0];
+        Real lambda = param.parameterArray[1];
+        Real G1 = param.parameterArray[2];
+        Real tau = param.parameterArray[3];
 
         MatrixSym inversematrix;
         invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
 
-        Real beta = 1 + mu/(lambda+mu);
+        Real beta = 1 + mu/ (lambda + mu);
         Real J = sinfo->J;
 
         Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
@@ -136,7 +138,7 @@ public:
         Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
 
 
-        outputTensor = 0.5 * (lambda + mu) * (Thirdmatrix * (-2 * J * (J - beta)) + inversematrix * (J * (2 * J - beta) * trHC)) + 0.5*Thirdmatrix*E1*exp(-t/tau);
+        outputTensor = 0.5 * (lambda + mu) * (Thirdmatrix * (-2 * J * (J - beta)) + inversematrix * (J * (2 * J - beta) * trHC));
 
 
     }

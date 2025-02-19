@@ -83,16 +83,16 @@ public:
     typedef typename Eigen::SelfAdjointEigenSolver<Eigen::Matrix<Real,3,3> >::MatrixType EigenMatrix;
     typedef typename Eigen::SelfAdjointEigenSolver<Eigen::Matrix<Real,3,3> >::RealVectorType CoordEigen;
 
-    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, MatrixSym &CauchyStressTensor, SReal& dt) override
+    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, SReal& dt) override
     {
 
-        Real k0 = param.parameterArray[0];
-        Real mu1 = param.parameterArray[1];
-        Real alpha1 = param.parameterArray[2];
-        Real E1 = param.parameterArray[3];
-        Real tau1 = param.parameterArray[4];
-        Real E2 = param.parameterArray[5];
-        Real tau2 = param.parameterArray[6];        
+        Real mu1 = param.parameterArray[0];
+        Real alpha1 = param.parameterArray[1];
+        Real G1 = param.parameterArray[2];
+        Real tau1 = param.parameterArray[3];
+        Real G2 = param.parameterArray[4];
+        Real tau2 = param.parameterArray[5];        
+        Real k0 = param.parameterArray[6];
 
         MatrixSym C=sinfo->C;
         EigenMatrix CEigen;
@@ -123,18 +123,10 @@ public:
         Real J = sinfo->J;
 
         /// Calculation Viscous strain 
-        sinfo->Evisc1 = (1/(1+(dt/tau1)))*(sinfo->Evisc_prev1+ (dt/tau1)*sinfo->E);
-        sinfo->Evisc2 = (1/(1+(dt/tau2)))*(sinfo->Evisc_prev2+ (dt/tau2)*sinfo->E);
+        sinfo->Evisc1 = (1 / (1 + ( tau1 / dt ))) * (( tau1 / dt ) * sinfo->Evisc_prev1 + sinfo->E);
+        sinfo->Evisc2 = (1 / (1 + ( tau2 / dt ))) * (( tau2 / dt ) * sinfo->Evisc_prev2 + sinfo->E);
 
-        // C-1:Evisc_previous_step
-        MatrixSym P1; 
-        P1.Mat2Sym(inversematrix.SymSymMultiply(sinfo->Evisc_prev1),P1);
-        MatrixSym P2; 
-        P2.Mat2Sym(inversematrix.SymSymMultiply(sinfo->Evisc_prev2),P2);
-
-        SPKTensorGeneral=(-(Real)1.0/(Real)3.0*trCalpha*inversematrix+Calpha_1)*(mu1/alpha1*pow(sinfo->J,-alpha1/(Real)3.0))+inversematrix*(k0*log(sinfo->J)
-        -0.5*(E1/(1+(dt/tau1)))-0.5*(E2/(1+(dt/tau2))))+0.5*(E1/(1+(dt/tau1)))*ID +0.5*(E2/(1+(dt/tau2)))*ID -(E1/(1+(dt/tau1)))*P1-(E2/(1+(dt/tau2)))*P2;
-
+        SPKTensorGeneral=(-(Real)1.0/(Real)3.0*trCalpha*inversematrix+Calpha_1)*(mu1/alpha1*pow(sinfo->J,-alpha1/(Real)3.0))+inversematrix*(k0*log(sinfo->J)) + 2 * G1 * (sinfo->E - sinfo->Evisc1) + 2 * G2 * (sinfo->E - sinfo->Evisc2);
 
 
         /// store the viscous strain every time step
@@ -147,13 +139,14 @@ public:
     void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
 
     {
-        Real k0 = param.parameterArray[0];
-        Real mu1 = param.parameterArray[1];
-        Real alpha1 = param.parameterArray[2];
-        Real E1 = param.parameterArray[3];
-        Real tau1 = param.parameterArray[4];
-        Real E2 = param.parameterArray[5];
-        Real tau2 = param.parameterArray[6];
+        Real mu1 = param.parameterArray[0];
+        Real alpha1 = param.parameterArray[1];
+        Real G1 = param.parameterArray[2];
+        Real tau1 = param.parameterArray[3];
+        Real G2 = param.parameterArray[4];
+        Real tau2 = param.parameterArray[5];        
+        Real k0 = param.parameterArray[6];
+        
         MatrixSym C=sinfo->C;
         EigenMatrix CEigen;
         CEigen(0,0)=C[0]; CEigen(0,1)=C[1]; CEigen(1,0)=C[1]; CEigen(1,1)=C[2]; CEigen(1,2)=C[4]; CEigen(2,1)=C[4];
@@ -192,7 +185,7 @@ public:
 
         outputTensor =  (_trHC*(-alpha1/(Real)6.0)*(-(Real)1.0/(Real)3.0*inversematrix*trCalpha+Calpha_1)+(Real)1.0/(Real)3.0*Firstmatrix*trCalpha-(Real)1.0/(Real)3.0*inversematrix*_trHCalpha_1*alpha1/(Real)2.0
                 +(alpha1/(Real)2.0-(Real)1)*Secondmatrix) * (mu1/alpha1*pow(sinfo->J,-alpha1/(Real)3.0))
-                +k0/(Real)2.0*_trHC*inversematrix-(Real)(k0*log(sinfo->J))*Firstmatrix + Firstmatrix*(E1*exp(-t/tau1)+(E2*exp(-t/tau2)));
+                +k0/(Real)2.0*_trHC*inversematrix-(Real)(k0*log(sinfo->J))*Firstmatrix;
 
 
     }
