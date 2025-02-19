@@ -75,59 +75,60 @@ public:
     typedef type::MatSym<3,Real> MatrixSym;
 
 
-    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, MatrixSym &CauchyStressTensor, SReal& dt) override
+    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral, SReal& dt) override
     {
-        Real mu=param.parameterArray[0];
-        Real E1=param.parameterArray[1];
-        Real tau=param.parameterArray[2];
-        Real k=param.parameterArray[3];
+        Real mu = param.parameterArray[0];
+        Real G1 = param.parameterArray[1];
+        Real tau = param.parameterArray[2];
+        Real lambda = param.parameterArray[3];
 
 
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
         
+        // inverse of the right Cauchy-Green deformation tensor
+        MatrixSym inverse_C;
+        sofa::type::invertMatrix(inverse_C, sinfo->C);
 
-        /// Calculation Viscous strain 
-        sinfo->Evisc1 = (1/(1+(dt/tau)))*(sinfo->Evisc_prev1+ (dt/tau)*sinfo->E);
+        //det(F) = J
+        const Real J = sinfo->J;
 
+        // viscous strain
+        sinfo->Evisc1 = (1 / (1 + ( tau / dt ))) * (( tau / dt ) * sinfo->Evisc_prev1 + sinfo->E);
 
-        /// The equation of the Cauchy Stress tensor for the SLS NeoHookean Model with the Neo-hookean spring working in parallel.
-        CauchyStressTensor = (2*mu+(E1/(1+(dt/tau))))*sinfo->E + k*log(sinfo->J)*ID - (E1/(1+(dt/tau)))*sinfo->Evisc_prev1;
+        //second Piola-Kirchhoff stress tensor
+        SPKTensorGeneral = mu * ID + (lambda * std::log(J) - mu) * inverse_C + 2 * G1 * (sinfo->E - sinfo->Evisc1);
 
-        /// store the viscous strain every time step
+        /// Store the viscous strain every time step.
         sinfo->Evisc_prev1 = sinfo->Evisc1;
 
-        /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
-        SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
 
     }
 
     void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
 
     {
-        Real mu=param.parameterArray[0];
-        Real E1=param.parameterArray[1];
-        Real tau=param.parameterArray[2];
-        Real k=param.parameterArray[3];
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
-        MatrixSym ID;
-        ID.identity();
+        Real mu = param.parameterArray[0];
+        Real G1 = param.parameterArray[1];
+        Real tau = param.parameterArray[2];
+        Real lambda = param.parameterArray[3];
 
 
-        Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
+ // inverse of the right Cauchy-Green deformation tensor
+        MatrixSym inverse_C;
+        sofa::type::invertMatrix(inverse_C, sinfo->C);
 
+        // trace(C^-1 * H)
+        Real trHC = inputTensor[0] * inverse_C[0] + inputTensor[2] * inverse_C[2] + inputTensor[5] * inverse_C[5]
+                + 2 * inputTensor[1] * inverse_C[1] + 2 * inputTensor[3] * inverse_C[3] + 2 *
+                inputTensor[4] * inverse_C[4];
 
+        // C^-1 * H * C^-1
+        MatrixSym Firstmatrix;
+        MatrixSym::Mat2Sym(inverse_C * (inputTensor * inverse_C), Firstmatrix);
 
-        MatrixSym Thirdmatrix;
-        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
+        outputTensor = Firstmatrix * (mu - lambda * log(sinfo->J)) + inverse_C * (lambda * trHC / 2);
 
-                    Real alpha = 2*mu+E1*exp(-t/tau);
-
-                    outputTensor = Thirdmatrix*(0.5*alpha-k*log(sinfo->J)*0.5)+ inversematrix*k*trHC*0.5;
 
 
     }

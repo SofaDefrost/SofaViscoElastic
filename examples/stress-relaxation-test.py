@@ -32,11 +32,6 @@ class CylinderController(Sofa.Core.Controller):
 		print(self.pos3[self.posmax1][2], self.posmax1)
 
 		self.lin = self.node.cylinder.tetras.position.value[self.posmax1][2]
-	
-		file1 = open(path + "SLS_Maxwell_relaxation.txt","w")
-		file1.write(str(0.0)+' '+str(0.0)+' '+str(0.0) +'\n')
-		file1.close()
-
 
 
 	def onAnimateEndEvent(self,event):
@@ -48,9 +43,6 @@ class CylinderController(Sofa.Core.Controller):
 
 
 ## IN THIS CODE WE WILL DO A STRESS RELAXATION  TEST, SO WE WILL APPLY A STEP AS INPUT, USING THE POSITIONCONSTRAINT.
-		file1 = open(path + "SLS_Maxwell_relaxation.txt","a")
-		file1.write(str(self.time)+' '+str(epsilon*100)+' '+str(self.stress[2]/1e6) +'\n' )
-		file1.close()
 
 
 def createScene(rootNode):
@@ -80,9 +72,9 @@ def createScene(rootNode):
 
 
 	rootNode.addObject('FreeMotionAnimationLoop')
-	rootNode.addObject('GenericConstraintSolver', maxIterations=1e4, tolerance=1e-50)
-	rootNode.gravity = [0,-9810,0]
-	rootNode.dt = (1e9/(20e9*100))
+	rootNode.addObject('GenericConstraintSolver', maxIterations=1e4, tolerance=1e-12)
+	rootNode.gravity = [0,0, -9.81]
+	rootNode.dt = (1e6/(20e6*100))
 
 	rootNode.addObject('VisualStyle', displayFlags='hideForceFields')
 	rootNode.addObject('OglSceneFrame', style='Arrows', alignment='TopRight')	
@@ -99,15 +91,16 @@ def createScene(rootNode):
 	cylinder.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3d" ,name="GeomAlgo")
 
 	cylinder.addObject('UniformMass', totalMass="0.0126", src = '@topo')
-	E1 = 70e6
-	tau1 = 1e9/E1
-	E2 = 20e6
-	tau2 = 1e9/E2
-	E3 = 10e6
-	tau3 = 1e9/E3
+	G1 = 70e6
+	tau1 = 1e6/G1
+	G2 = 20e6
+	tau2 = 1e6/G2
+	G3 = 10e6
+	tau3 = 1e6/G3
 	nu = 0.44
-
-	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="MaxwellFirstOrder", ParameterSet= str(E1)+' '+str(tau1)+' '+str(nu))
+	#lamb = 2*G1*nu/(1-2*nu) ## relationship from wikipedia: https://en.wikipedia.org/wiki/Lam%C3%A9_parameters
+	lamb = 0
+	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src='@topo', materialName="Burgers", ParameterSet=str(G1) + ' '+ str(tau1) + ' ' + str(G2)+' '+str(tau2)+ ' '+ str(lamb))
 
 	cylinder.addObject('BoxROI', name='boxROI',box="-0.011 -0.011 -0.001  0.011 0.011 0.001", drawBoxes=True)
 	cylinder.addObject('FixedProjectiveConstraint', indices = '@boxROI.indices')

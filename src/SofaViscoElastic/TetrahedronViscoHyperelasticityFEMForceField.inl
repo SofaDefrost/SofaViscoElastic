@@ -84,7 +84,6 @@ template <class DataTypes> TetrahedronViscoHyperelasticityFEMForceField<DataType
     , m_tetrahedronInfo(initData(&m_tetrahedronInfo, "tetrahedronInfo", "Internal tetrahedron data"))
     , m_edgeInfo(initData(&m_edgeInfo, "edgeInfo", "Internal edge data"))
     , d_stressSPK(initData(&d_stressSPK, "stressSPK","The stress of the Second Piola Kirchhoff Stress Tensor per Element"))   
-    , d_Cauchystress(initData(&d_Cauchystress, "CauchyStress","The stress of the Cauchy Stress Tensor per Element"))
     , d_stressVonMisesElement(initData(&d_stressVonMisesElement, "stressVonMisesElement","The stress of the Von Mises Stress per Element"))
     , d_stressVonMisesNode(initData(&d_stressVonMisesNode, "stressVonMisesNode","The stress of the Von Mises Stress per Node"))
 
@@ -137,11 +136,7 @@ void TetrahedronViscoHyperelasticityFEMForceField<DataTypes>::instantiateMateria
     {        
         m_myMaterial = std::make_unique<SLSOgdenSecondOrder<DataTypes>>();
     } 
-    //else if (material == "SLSKelvinVoigtSecondOrder")
-    //{        
-
-    //    m_myMaterial = std::make_unique<SLSKelvinVoigtSecondOrder<DataTypes>>();
-    //}                  
+                
     else
     {
         msg_error() << "material name " << material <<
@@ -340,7 +335,6 @@ void TetrahedronViscoHyperelasticityFEMForceField<DataTypes>::addForce(const cor
     Coord dp[3], x0, sv;
 
     vector<Vec6d> vecStressSPK;
-    vector<Vec6d> vecStressCauchy;
 
     vector<Real> vecStressVonMisesElement;
 
@@ -414,35 +408,26 @@ void TetrahedronViscoHyperelasticityFEMForceField<DataTypes>::addForce(const cor
                                tetInfo->C(2, 2));
 
 
-
         tetInfo->m_SPKTensorGeneral.clear();
-        tetInfo->m_CauchyStressTensor.clear();
-
         tetInfo->m_SPKStress.clear();
-        tetInfo->m_CauchyStress.clear();
 
-        m_myMaterial->deriveSPKTensor(tetInfo, globalParameters, tetInfo->m_SPKTensorGeneral,tetInfo->m_CauchyStressTensor,dt);
+        m_myMaterial->deriveSPKTensor(tetInfo, globalParameters, tetInfo->m_SPKTensorGeneral,dt);
 
         /// Stress map in simulation (Voigt notation of the Stress tensor)
         vecStressSPK.push_back(tetInfo->m_SPKTensorGeneral.getVoigt());
-        vecStressCauchy.push_back(tetInfo->m_CauchyStressTensor.getVoigt());
 
         /// Python Bindings
         tetInfo->m_SPKStress = tetInfo->m_SPKTensorGeneral.getVoigt();
-        tetInfo->m_CauchyStress = tetInfo->m_CauchyStressTensor.getVoigt();
 
         /// Calculation of the General Von mises Stress per Element
-        tetInfo->m_VonMisesStress = sqrt(0.5*((tetInfo->m_CauchyStress(0)-tetInfo->m_CauchyStress(1))*(tetInfo->m_CauchyStress(0)-tetInfo->m_CauchyStress(1)) +
-            (tetInfo->m_CauchyStress(1)-tetInfo->m_CauchyStress(2))*(tetInfo->m_CauchyStress(1)-tetInfo->m_CauchyStress(2)) +
-            (tetInfo->m_CauchyStress(2)-tetInfo->m_CauchyStress(0))*(tetInfo->m_CauchyStress(2)-tetInfo->m_CauchyStress(0)) +
-            3*(tetInfo->m_CauchyStress(3)*tetInfo->m_CauchyStress(3)+tetInfo->m_CauchyStress(4)*tetInfo->m_CauchyStress(4) + 
-            tetInfo->m_CauchyStress(5)*tetInfo->m_CauchyStress(5))
+        tetInfo->m_VonMisesStress = sqrt(0.5*((tetInfo->m_SPKStress(0)-tetInfo->m_SPKStress(1))*(tetInfo->m_SPKStress(0)-tetInfo->m_SPKStress(1)) +
+            (tetInfo->m_SPKStress(1)-tetInfo->m_SPKStress(2))*(tetInfo->m_SPKStress(1)-tetInfo->m_SPKStress(2)) +
+            (tetInfo->m_SPKStress(2)-tetInfo->m_SPKStress(0))*(tetInfo->m_SPKStress(2)-tetInfo->m_SPKStress(0)) +
+            3*(tetInfo->m_SPKStress(3)*tetInfo->m_SPKStress(3)+tetInfo->m_SPKStress(4)*tetInfo->m_SPKStress(4) + 
+            tetInfo->m_SPKStress(5)*tetInfo->m_SPKStress(5))
             ));
 
     vecStressVonMisesElement.push_back(tetInfo->m_VonMisesStress);
-
-
-
 
 
 
@@ -460,9 +445,6 @@ void TetrahedronViscoHyperelasticityFEMForceField<DataTypes>::addForce(const cor
     d_stressSPK.setValue(vecStressSPK);
     d_stressSPK.endEdit();
 
-    d_Cauchystress.beginEdit();
-    d_Cauchystress.setValue(vecStressCauchy);
-    d_Cauchystress.endEdit();
 
     d_stressVonMisesElement.beginEdit();
     d_stressVonMisesElement.setValue(vecStressVonMisesElement);

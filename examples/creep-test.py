@@ -36,9 +36,6 @@ class CylinderController(Sofa.Core.Controller):
 
 		self.lin = self.node.cylinder.tetras.position.value[self.posmax1][2]
 	
-		file1 = open(path + "SLS_Maxwell_cyclic1.txt","w")
-		file1.write(str(0.0)+' '+str(0.0)+' '+str(0.0) +'\n')
-		file1.close()
 
 
 
@@ -125,15 +122,16 @@ def createScene(rootNode):
 
 	cylinder.addObject('BoxROI', name="boxToPull", box=[-0.011, -0.011, 0.05, 0.011, 0.011, 0.051], drawBoxes=False)
 
-	E1 = 70e6
-	E2 = 20e6
-	E3 = 10e6
-	tau1 = 1e6/E1
-	tau2 = 1e6/E2
-	tau3 = 1e6/E3
+	G1 = 70e6
+	G2 = 20e6
+	G3 = 10e6
+	tau1 = 1e6/G1
+	tau2 = 1e6/G2
+	tau3 = 1e6/G3
 	nu = 0.44 ## Poisson's ratio
-	#cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSMaxwellFirstOrder", ParameterSet= str(E1)+' '+str(E2)+' '+str(tau2)+' '+str(nu))
-	cylinder.addObject('TetrahedronFEMForceField', template='Vec3d', name='FEM', src ='@topo',youngModulus = E1, poissonRatio = nu)
+	lamb = 2*G1*nu/(1-2*nu) ## relationship from wikipedia: https://en.wikipedia.org/wiki/Lam%C3%A9_parameters
+
+	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSMaxwellFirstOrder", ParameterSet= str(G1)+' '+str(lamb)+' '+str(G2)+' '+str(tau2))
 	
 	cylinder.addObject('ConstantForceField', name = "CFF", listening = True, totalForce =[0,0,0],template="Vec3d", src= "@topo", indices = cylinder.boxToPull.indices.linkpath) 
 	

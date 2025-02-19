@@ -73,7 +73,7 @@ public:
   };
 
   /** computes the second Piola Kirchhoff stress tensor of the current configuration */
-   virtual void deriveSPKTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,MatrixSym &,MatrixSym &, SReal&)  = 0;
+   virtual void deriveCauchyGreenStressTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,MatrixSym &, SReal&)  = 0;
 
   /** computes the Elasticity Tensor of the current configuration */
    virtual void applyElasticityTensor(StrainInformation<DataTypes> *, const  MaterialParameters<DataTypes> &,const MatrixSym& , MatrixSym &, SReal&)  = 0;
@@ -104,7 +104,7 @@ public:
   typedef type::MatSym<3,Real> MatrixSym;
 
   /// Trace of C = I1
-  Real trC;
+  Real trE;
   Real J;
   Real lambda;
 
@@ -115,8 +115,8 @@ public:
 
   Real logJ;
   MatrixSym E; //strain tensor
-  MatrixSym Eprev; // strain tensor previous time step. 
-
+  MatrixSym Eprev; //strain tensor previous step
+  
   MatrixSym Evisc1; // viscous strain
   MatrixSym Evisc_prev1; // viscous strain tensor at previous time step
 
@@ -124,7 +124,7 @@ public:
   MatrixSym Evisc_prev2; // viscous strain tensor at previous time step (second dashpot)
 
 
-  StrainInformation() : trC(0), J(0), lambda(0), hasBeenInitialized(false), C(), logJ(0),E(), Eprev(), Evisc1(), Evisc_prev1(), Evisc2(), Evisc_prev2() {}
+  StrainInformation() : trE(0), J(0), lambda(0), hasBeenInitialized(false), C(), logJ(0),E(), Evisc1(), Evisc_prev1(), Evisc2(), Evisc_prev2() {}
   virtual ~StrainInformation() {}
 };
 

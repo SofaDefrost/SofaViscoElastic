@@ -68,60 +68,46 @@ public:
     typedef type::MatSym<3,Real> MatrixSym;
 
 
-    void deriveSPKTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &SPKTensorGeneral,MatrixSym &CauchyStressTensor, SReal& dt) override
+    void deriveCauchyGreenStressTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,MatrixSym &CauchyStressTensor, SReal& dt) override
     {
 
-        Real E0=param.parameterArray[0];
-        Real E1=param.parameterArray[1];
-        Real tau=param.parameterArray[2];
-        Real nu=param.parameterArray[3];        
+        Real G0 = param.parameterArray[0];
+        Real G1 = param.parameterArray[1];
+        Real tau = param.parameterArray[2];        
+        Real lambda = param.parameterArray[3];
 
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
         MatrixSym ID;
         ID.identity();
-        Real trE = sinfo->E(0,0) + sinfo->E(1,1) +sinfo->E(2,2);
 
         /// Calculation Viscous strain
-        sinfo->Evisc1 = (1/(1+(((E0*dt)/(E1*tau))+(dt/tau))))*(sinfo->Evisc_prev1+((E0*dt)/(E1*tau))*sinfo->E);
+        sinfo->Evisc1 = (1 / (G0 + G1 * (1 + tau / dt))) * (G0 * sinfo->E + G1 * (tau / dt) * sinfo->Evisc_prev1);
 
 
         /// The equation of the Cauchy Stress tensor for the SLS Kelvin Model.
-        CauchyStressTensor = E0*(sinfo->E-sinfo->Evisc1)+((E0)/(3*(1-2*nu)))*trE*ID; 
+        CauchyStressTensor =  2 * G0 * (sinfo->E - sinfo->Evisc1) + lambda * sinfo->trE * ID; 
 
         /// store the viscous strain every time step
         sinfo->Evisc_prev1 = sinfo->Evisc1;
         
 
-        /// Do the Multiplication for C^-1 to obtain the Second Piola Kirchhoff stress tensor
-        SPKTensorGeneral.Mat2Sym(inversematrix.SymSymMultiply(CauchyStressTensor), SPKTensorGeneral);
     }
  
 
     virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
     {
-        Real E0=param.parameterArray[0];
-        Real E1=param.parameterArray[1];
-        Real tau=param.parameterArray[2];
-        Real nu=param.parameterArray[3];
-        MatrixSym inversematrix;
-        invertMatrix(inversematrix,sinfo->C);
+        Real G0=param.parameterArray[0];
+        Real G1 = param.parameterArray[1];
+        Real tau = param.parameterArray[2];
+        Real lambda = param.parameterArray[3];
+
         MatrixSym ID;
         ID.identity();
 
+        const Real trH = sofa::type::trace(inputTensor);
 
-        Real trHC=inputTensor[0]*inversematrix[0]+inputTensor[2]*inversematrix[2]+inputTensor[5]*inversematrix[5]
-                    +2*inputTensor[1]*inversematrix[1]+2*inputTensor[3]*inversematrix[3]+2*inputTensor[4]*inversematrix[4];
+        // The 4th order tensor of elasticity is always approximated to the one in case of pure Linear elasticity (Long-term elasticity tensor) 
+        outputTensor = ID * (trH * lambda / 2.0) + inputTensor * G0;
 
-
-
-
-        MatrixSym Thirdmatrix;
-        Thirdmatrix.Mat2Sym(inversematrix.SymMatMultiply(inputTensor.SymSymMultiply(inversematrix)),Thirdmatrix);
-
-        Real alpha = E0+E1;
-
-        outputTensor = Thirdmatrix*(0.5*alpha-((E0+E1)/(3*(1-2*nu)))*log(sinfo->J)*0.5)+ inversematrix*((E0+E1)/(3*(1-2*nu)))*trHC*0.5;
 
     }
 };

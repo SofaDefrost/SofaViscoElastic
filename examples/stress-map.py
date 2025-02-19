@@ -38,7 +38,6 @@ class CylinderController(Sofa.Core.Controller):
 
 	
 		stress = (self.node.cylinder.FEM.CauchyStress.value)/1e6 ## MPa
-		stressPerNode = np.array([[0,0,0,0],[0,0,0,0]])
 
 
 				
@@ -48,7 +47,7 @@ class CylinderController(Sofa.Core.Controller):
 		self.node.cylinder.visu.Map.min.value = self.node.cylinder.visu.display.currentMin.value
 		self.node.cylinder.visu.Map.max.value = self.node.cylinder.visu.display.currentMax.value
 
-
+		print(self.stress[self.posmax1][2]/1e6)
 
 
 ## IN THIS CODE WE WILL DO A STRESS RELAXATION  TEST, SO WE WILL APPLY A STEP AS INPUT, USING THE POSITIONCONSTRAINT.
@@ -84,7 +83,7 @@ def createScene(rootNode):
 	rootNode.addObject('FreeMotionAnimationLoop')
 	rootNode.addObject('GenericConstraintSolver', maxIterations=1e4, tolerance=1e-50)
 	rootNode.gravity = [0,0,-9.81]
-	rootNode.dt = (1e9/(20e9*1000))
+	rootNode.dt = (1e6/(20e6*100))
 
 	rootNode.addObject('VisualStyle', displayFlags='hideForceFields')
 	rootNode.addObject('OglSceneFrame', style='Arrows', alignment='TopRight')	
@@ -101,15 +100,16 @@ def createScene(rootNode):
 	cylinder.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3d" ,name="GeomAlgo")
 
 	cylinder.addObject('UniformMass', totalMass="0.0126", src = '@topo')
-	E1 = 70e9
-	tau1 = 1e9/E1
-	E2 = 20e9
-	tau2 = 1e9/E2
-	E3 = 10e9
-	tau3 = 1e9/E3
+	G1 = 70e6
+	tau1 = 1e6/G1
+	G2 = 20e6
+	tau2 = 1e6/G2
+	G3 = 10e6
+	tau3 = 1e9/G3
 	nu = 0.44
+	lamb = 30e6
 
-	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSKelvinVoigtSecondOrder", ParameterSet= str(E1)+' '+str(E2)+' '+str(tau2)+' '+str(E3)+' '+str(tau3)+' '+str(nu))
+	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="MaxwellFirstOrder", ParameterSet= str(G1)+' '+str(tau1)+' '+str(lamb))
 
 	cylinder.addObject('BoxROI', name='boxROI',box="-0.011 -0.011 -0.001  0.011 0.011 0.001", drawBoxes=True)
 	cylinder.addObject('FixedProjectiveConstraint', indices = '@boxROI.indices')

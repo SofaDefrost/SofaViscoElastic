@@ -47,7 +47,7 @@ set(SOURCE_FILES
 
     )
 
-sofa_find_package(Sofa.Simulation.Core REQUIRED)
+find_package(Sofa.Simulation.Core REQUIRED)
 
 sofa_find_package(SofaPython3 QUIET)
 

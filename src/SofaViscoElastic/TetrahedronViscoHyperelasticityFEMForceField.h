@@ -114,9 +114,6 @@ public:
         /// Second Piola Kirchhoff stress tensor 
         MatrixSym m_SPKTensorGeneral;
 
-        /// Cauchy Green stress Tensor 
-        MatrixSym m_CauchyStressTensor;
-
         /// Von Mises Stress
         Real m_VonMisesStress;
 

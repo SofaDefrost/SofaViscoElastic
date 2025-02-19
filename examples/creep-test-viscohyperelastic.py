@@ -35,10 +35,7 @@ class CylinderController(Sofa.Core.Controller):
 		print(self.posmax1)
 
 		self.lin = self.node.cylinder.tetras.position.value[self.posmax1][2]
-	
-		file1 = open(path + "SLS_Maxwell_cyclic.txt","w")
-		file1.write(str(0.0)+' '+str(0.0)+' '+str(0.0) +'\n')
-		file1.close()
+
 
 
 
@@ -60,34 +57,32 @@ class CylinderController(Sofa.Core.Controller):
 
 		
 ##	AMPLITUDE SWEEP 
-		self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e3/2))*1*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
+		self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e2/2))*1*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
 
-		if(self.time >= self.tau*100 and self.time<= self.tau*150):
-			self.node.cylinder.CFF.totalForce.value = [0, 0, 0] ## amplitude in force calculated with Matlab --> Step function
+		##if(self.time >= self.tau*100 and self.time<= self.tau*150):
+		##	self.node.cylinder.CFF.totalForce.value = [0, 0, 0] ## amplitude in force calculated with Matlab --> Step function
 		
 
-		if(self.time >= self.tau*150 and self.time <= self.tau*200):		
-			self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e3/2))*3*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
+		##if(self.time >= self.tau*150 and self.time <= self.tau*200):		
+		##	self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e3/2))*3*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
 		
-		if(self.time >= self.tau*200 and self.time <= self.tau*250):		
-			self.node.cylinder.CFF.totalForce.value = [0,0,0] ## amplitude in force calculated with Matlab --> Step function 
+		##if(self.time >= self.tau*200 and self.time <= self.tau*250):		
+		#	self.node.cylinder.CFF.totalForce.value = [0,0,0] ## amplitude in force calculated with Matlab --> Step function 
 
-		if(self.time >= self.tau*250 and self.time <= self.tau*300):		
-			self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e3/2))*5*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
+		#if(self.time >= self.tau*250 and self.time <= self.tau*300):		
+		#	self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e3/2))*5*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
 		
-		if(self.time >= self.tau*300 and self.time <= self.tau*350):		
-			self.node.cylinder.CFF.totalForce.value = [0,0,0] ## amplitude in force calculated with Matlab --> Step function 		
+		#if(self.time >= self.tau*300 and self.time <= self.tau*350):		
+		#	self.node.cylinder.CFF.totalForce.value = [0,0,0] ## amplitude in force calculated with Matlab --> Step function 		
 
-		if(self.time >= self.tau*350 and self.time <= self.tau*400):		
-			self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e3/2))*7*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
+		#if(self.time >= self.tau*350 and self.time <= self.tau*400):		
+		#	self.node.cylinder.CFF.totalForce.value = [0,0,((3.141592653589793e3/2))*7*np.heaviside(self.time, 0.0)] ## amplitude in force calculated with Matlab --> Step function 
 		
-		if(self.time >= self.tau*400):		
-			self.node.cylinder.CFF.totalForce.value = [0,0,0] ## amplitude in force calculated with Matlab --> Step function 
+		#if(self.time >= self.tau*400):		
+		#	self.node.cylinder.CFF.totalForce.value = [0,0,0] ## amplitude in force calculated with Matlab --> Step function 
 
 		print(epsilon*100)
-		file1 = open(path + "SLS_Maxwell_cyclic.txt","a")
-		file1.write(str(self.time)+' '+str(self.node.cylinder.FEM.stressVonMisesElement.value[4])+' '+str(epsilon*100)+ '\n' )
-		file1.close()
+
 
 
 
@@ -133,9 +128,9 @@ def createScene(rootNode):
 ## SLS-MAXWELL FIRST ORDER Cylinder: Material F5000- R0.5  (BLUE)
 	cylinder = rootNode.addChild('cylinder')
 
-	cylinder.addObject('EulerImplicitSolver', name="Solver",rayleighMass = 0.1, rayleighStiffness = 0.1)
+	cylinder.addObject('EulerImplicitSolver', name="Solver",rayleighMass = 0.0, rayleighStiffness = 0.0)
 
-	cylinder.addObject('CGLinearSolver', name="ItSolver", iterations="250", tolerance="1e-30", threshold = '1e-12')
+	cylinder.addObject('CGLinearSolver', name="ItSolver", iterations="250", tolerance="1e-12", threshold = '1e-12')
 	cylinder.addObject('MeshVTKLoader', name='loader', filename='mesh/cylinder5296.vtk', translation = [0, 0.0, 0])
 	cylinder.addObject('MechanicalObject', name='tetras', template='Vec3d', src = '@loader')
 	cylinder.addObject('TetrahedronSetTopologyContainer', name="topo", src ='@loader')
