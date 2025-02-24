@@ -131,7 +131,7 @@ def createScene(rootNode):
 	nu = 0.44 ## Poisson's ratio
 	lamb = 2*G1*nu/(1-2*nu) ## relationship from wikipedia: https://en.wikipedia.org/wiki/Lam%C3%A9_parameters
 
-	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSMaxwellFirstOrder", ParameterSet= str(G1)+' '+str(lamb)+' '+str(G2)+' '+str(tau2))
+	cylinder.addObject('TetrahedronViscoelasticityFEMForceField', template='Vec3d', name='FEM', src ='@topo',materialName="SLSMaxwellFirstOrder", ParameterSet= str(G1)+' '+str(G2)+' '+str(tau2)+' '+str(lamb))
 	
 	cylinder.addObject('ConstantForceField', name = "CFF", listening = True, totalForce =[0,0,0],template="Vec3d", src= "@topo", indices = cylinder.boxToPull.indices.linkpath) 
 	
