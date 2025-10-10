@@ -553,7 +553,7 @@ void TetrahedronViscoelasticityFEMForceField<DataTypes>::updateTangentMatrix()
     }
 
 
-/*   const VecCoord& dofs = this->mstate->read(core::ConstVecCoordId::position())->getValue();
+/*   const VecCoord& dofs = this->mstate->read(core::vec_id::read_access::position)->getValue();
     helper::WriteAccessor<Data<type::vector<Real> > > vMN =  d_stressVonMisesNode;
     helper::WriteAccessor<Data<type::vector<Real> > > vME =  d_stressVonMisesElement;
 
