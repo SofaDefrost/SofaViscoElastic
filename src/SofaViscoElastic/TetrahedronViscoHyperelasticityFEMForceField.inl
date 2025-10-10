@@ -140,7 +140,7 @@ void TetrahedronViscoHyperelasticityFEMForceField<DataTypes>::instantiateMateria
     else
     {
         msg_error() << "material name " << material <<
-            " is not valid (should be MaxwellFirstOrder, SLSMaxwellFirstOrder, KelvinVoigtFirstOrder, SLSKelvinVoigtFirstOrder, Burgers, MaxwellSecondOrder, SLSMaxwellSecondOrder, KelvinVoigtSecondOrder, SLSKelvinVoigtSecondOrder)";
+            "is not valid (should be SLSNeoHookeanFirstOrder, SLSNeoHookeanSecondOrder, SLSMooneyRivlinFirstOrder, SLSMooneyRivlinSecondOrder, SLSStableNeoHookeanFirstOrder, SLSStableNeoHookeanSecondOrder, SLSOgdenFirstOrder, SLSOgdenSecondOrder)";
     }
 
     if (m_myMaterial)
