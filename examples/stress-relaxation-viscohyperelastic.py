@@ -1,5 +1,4 @@
 import SofaRuntime
-SofaRuntime.importPlugin("SofaComponentAll")
 
 # to add elements like Node or objects
 import Sofa.Core
@@ -80,7 +79,7 @@ def createScene(rootNode):
 
 
 	rootNode.addObject('FreeMotionAnimationLoop')
-	rootNode.addObject('GenericConstraintSolver', maxIterations=1e4, tolerance=1e-50)
+	rootNode.addObject('ProjectedGaussSeidelConstraintSolver', maxIterations=1e4, tolerance=1e-50)
 	rootNode.gravity = [0,-9810,0]
 	rootNode.dt = (1e9/(20e9*100))
 

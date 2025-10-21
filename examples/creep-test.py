@@ -1,8 +1,5 @@
 # to be able to add sofa objects you need to first load the plugins that implement them.
-# For simplicity you can load the plugin "SofaComponentAll" that will load all most
-# common sofa objects.
 import SofaRuntime
-SofaRuntime.importPlugin("SofaComponentAll")
 
 # to add elements like Node or objects
 import Sofa.Core
@@ -95,7 +92,7 @@ def createScene(rootNode):
 	rootNode.dt = (1e6/(20e6*100))
 	rootNode.name = 'rootNode'
 	rootNode.addObject('DefaultAnimationLoop', computeBoundingBox="0")
-	rootNode.addObject('GenericConstraintSolver', tolerance=1e-24, maxIterations=1000)
+	rootNode.addObject('ProjectedGaussSeidelConstraintSolver', tolerance=1e-24, maxIterations=1000)
 	rootNode.addObject('OglSceneFrame', style='Arrows', alignment='TopRight')
 
 

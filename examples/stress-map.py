@@ -1,5 +1,4 @@
 import SofaRuntime
-SofaRuntime.importPlugin("SofaComponentAll")
 
 # to add elements like Node or objects
 import Sofa.Core
@@ -81,7 +80,7 @@ def createScene(rootNode):
 	rootNode.addObject('RequiredPlugin', name='SoftRobots') # Needed to use components [PositionConstraint] 
 
 	rootNode.addObject('FreeMotionAnimationLoop')
-	rootNode.addObject('GenericConstraintSolver', maxIterations=1e4, tolerance=1e-50)
+	rootNode.addObject('ProjectedGaussSeidelConstraintSolver', maxIterations=1e4, tolerance=1e-50)
 	rootNode.gravity = [0,0,-9.81]
 	rootNode.dt = (1e6/(20e6*100))
 

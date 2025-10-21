@@ -1,8 +1,5 @@
 # to be able to add sofa objects you need to first load the plugins that implement them.
-# For simplicity you can load the plugin "SofaComponentAll" that will load all most
-# common sofa objects.
 import SofaRuntime
-# SofaRuntime.importPlugin("SofaComponentAll")
 
 # to add elements like Node or objects
 import Sofa.Core
