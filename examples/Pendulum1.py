@@ -98,7 +98,6 @@ def createScene(rootNode):
 	rootNode.addObject('RequiredPlugin', name="Sofa.Component.Mass")
 	rootNode.addObject('RequiredPlugin', name="Sofa.Component.SolidMechanics.Spring")
 	rootNode.addObject('RequiredPlugin', name="Sofa.Component.StateContainer")
-	rootNode.addObject('RequiredPlugin', name="MyAwesomeComponents")
 	rootNode.addObject('RequiredPlugin', name="Sofa.Component.Collision.Geometry")
 	rootNode.addObject('RequiredPlugin', name="Sofa.Component.ODESolver.Forward")
 	rootNode.addObject('VisualStyle', displayFlags='hideVisualModels showBehaviorModels showCollisionModels hideBoundingCollisionModels hideForceFields hideInteractionForceFields hideWireframe')

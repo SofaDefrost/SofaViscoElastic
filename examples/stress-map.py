@@ -36,13 +36,13 @@ class CylinderController(Sofa.Core.Controller):
 	def onAnimateBeginEvent(self,event):
 
 	
-		stress = (self.node.cylinder.FEM.CauchyStress.value)/1e6 ## MPa
+		self.stress = (self.node.cylinder.FEM.CauchyStress.value)/1e6 ## MPa
 
 
 				
 		self.time = self.node.time.value
 		epsilon = (self.node.cylinder.tetras.position.value[self.posmax1][2]-self.lin)/self.lin
-		self.node.cylinder.visu.display.pointData.value = (stress[0:len(self.pos3),2])
+		self.node.cylinder.visu.display.pointData.value = (self.stress[0:len(self.pos3),2])
 		self.node.cylinder.visu.Map.min.value = self.node.cylinder.visu.display.currentMin.value
 		self.node.cylinder.visu.Map.max.value = self.node.cylinder.visu.display.currentMax.value
 

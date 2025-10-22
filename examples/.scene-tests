@@ -1,0 +1,5 @@
+# This runs very slowly, so compute only a few iterations
+iterations "stress-map.py" "30"
+
+# Ignore examples
+ignore "volumetric_mesh.py"
