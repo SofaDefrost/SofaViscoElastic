@@ -2,12 +2,17 @@ import SofaRuntime
 
 # to add elements like Node or objects
 import Sofa.Core
-root = Sofa.Core.Node()
-import math 
+import math
 import numpy as np
 
 import os
-path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'plot')
+if not os.path.isdir(path):
+	if os.path.isfile(path):
+		raise ValueError(f"path {path} already exist and is a file")
+	else:
+		os.mkdir(path)
+
 
 
 class CylinderController(Sofa.Core.Controller):
@@ -32,14 +37,14 @@ class CylinderController(Sofa.Core.Controller):
 
 		self.lin = self.node.cylinder.tetras.position.value[self.posmax1][2]
 	
-		file1 = open(path + "SLS_Maxwell_relaxation.txt","w")
+		file1 = open(os.path.join(path,"SLS_Maxwell_relaxation.txt"),"w")
 		file1.write(str(0.0)+' '+str(0.0)+' '+str(0.0) +'\n')
 		file1.close()
 
 
 
 	def onAnimateEndEvent(self,event):
-		self.stress = self.node.cylinder.FEM.CauchyStress[self.posmax1]
+		self.stress = self.node.cylinder.FEM.stressSPK[self.posmax1]
 		self.time = self.node.time.value
 		self.tau = self.node.cylinder.FEM.ParameterSet.value[2] 
 		epsilon = (self.node.cylinder.tetras.position.value[self.posmax1][2]-self.lin)/self.lin
@@ -47,7 +52,7 @@ class CylinderController(Sofa.Core.Controller):
 
 
 ## IN THIS CODE WE WILL DO A STRESS RELAXATION  TEST, SO WE WILL APPLY A STEP AS INPUT, USING THE POSITIONCONSTRAINT.
-		file1 = open(path + "SLS_Maxwell_relaxation.txt","a")
+		file1 = open(os.path.join(path,"SLS_Maxwell_relaxation.txt"),"a")
 		file1.write(str(self.time)+' '+str(epsilon*100)+' '+str(self.stress[2]/1e6) +'\n' )
 		file1.close()
 
@@ -76,6 +81,7 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name = "Sofa.Component.Constraint.Projective")
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
 	rootNode.addObject('RequiredPlugin', name='SoftRobots') # Needed to use components [PositionConstraint]  
+	rootNode.addObject("RequiredPlugin", name="SofaViscoElastic")
 
 
 	rootNode.addObject('FreeMotionAnimationLoop')

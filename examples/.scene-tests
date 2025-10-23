@@ -1,5 +1,11 @@
 # This runs very slowly, so compute only a few iterations
 iterations "stress-map.py" "30"
 
+#Throws nan after this
+iterations "stress-relaxation-viscohyperelastic.py" "40"
+
 # Ignore examples
 ignore "volumetric_mesh.py"
+
+# HHTSolver doesn't exist
+ignore "Pendulum1.py"

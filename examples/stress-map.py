@@ -2,13 +2,8 @@ import SofaRuntime
 
 # to add elements like Node or objects
 import Sofa.Core
-root = Sofa.Core.Node()
-import math 
+import math
 import numpy as np
-
-import os
-path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
-
 
 class CylinderController(Sofa.Core.Controller):
 
@@ -37,7 +32,8 @@ class CylinderController(Sofa.Core.Controller):
 
 	
 		self.stress = (self.node.cylinder.FEM.CauchyStress.value)/1e6 ## MPa
-
+		if len(self.stress) == 0:
+			return
 
 				
 		self.time = self.node.time.value
@@ -78,6 +74,7 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
 	rootNode.addObject('RequiredPlugin', name='Sofa.GL.Component.Rendering2D') # Needed to use components [OglColorMap]
 	rootNode.addObject('RequiredPlugin', name='SoftRobots') # Needed to use components [PositionConstraint] 
+	rootNode.addObject("RequiredPlugin", name="SofaViscoElastic")
 
 	rootNode.addObject('FreeMotionAnimationLoop')
 	rootNode.addObject('ProjectedGaussSeidelConstraintSolver', maxIterations=1e4, tolerance=1e-50)

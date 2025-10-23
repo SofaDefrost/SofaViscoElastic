@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
+path = os.path.dirname(os.path.abspath(__file__))+'/Pendulum/'
 
 
 class PendulumController(Sofa.Core.Controller):
@@ -31,28 +31,28 @@ class PendulumController(Sofa.Core.Controller):
 		self.resultTRAP = []
 
 
-		file1 = open("/home/pasquale/EulerExplicit.txt","w")
+		file1 = open(f"{path}/EulerExplicit.txt","w")
 		file1.write(str(0.0)+' '+str(self.node.EulerExplicit.Particles.position.value[1][2])+'\n')
 		file1.close()
 
-		file2 = open("/home/pasquale/RungeKutta.txt","w")
+		file2 = open(f"{path}/RungeKutta.txt","w")
 		file2.write(str(0.0)+' '+str(self.node.RungeKutta.Particles.position.value[1][2])+'\n')
 		file2.close()
 
 
-		file3 = open("/home/pasquale/HHT.txt","w")
+		file3 = open(f"{path}HHT.txt","w")
 		file3.write(str(0.0)+' '+str(self.node.HHT.Particles.position.value[1][2])+'\n')
 		file3.close()
 
-		file4 = open("/home/pasquale/Newmark.txt","w")
+		file4 = open(f"{path}Newmark.txt","w")
 		file4.write(str(0.0)+' '+str(self.node.Newmark.Particles.position.value[1][2])+'\n')
 		file4.close()
 
-		file5 = open("/home/pasquale/EulerImplicit.txt","w")
+		file5 = open(f"{path}EulerImplicit.txt","w")
 		file5.write(str(0.0)+' '+str(self.node.EulerImplicit.Particles.position.value[1][2])+'\n')
 		file5.close()
 
-		file5 = open("/home/pasquale/Trapezoidal.txt","w")
+		file5 = open(f"{path}Trapezoidal.txt","w")
 		file5.write(str(0.0)+' '+str(self.node.Trapezoidal.Particles.position.value[1][2])+'\n')
 		file5.close()
 
@@ -61,28 +61,28 @@ class PendulumController(Sofa.Core.Controller):
 
 		self.time = self.node.time.value
 
-		file1 = open("/home/pasquale/EulerExplicit.txt","a")
+		file1 = open(f"{path}EulerExplicit.txt","a")
 		file1.write(str(self.time)+' '+str(self.node.EulerExplicit.Particles.position.value[1][2])+'\n')
 		file1.close()
 
-		file2 = open("/home/pasquale/RungeKutta.txt","a")
+		file2 = open(f"{path}RungeKutta.txt","a")
 		file2.write(str(self.time)+' '+str(self.node.RungeKutta.Particles.position.value[1][2])+'\n')
 		file2.close()
 
 
-		file3 = open("/home/pasquale/HHT.txt","a")
+		file3 = open(f"{path}HHT.txt","a")
 		file3.write(str(self.time)+' '+str(self.node.HHT.Particles.position.value[1][2])+'\n')
 		file3.close()
 
-		file4 = open("/home/pasquale/Newmark.txt","a")
+		file4 = open(f"{path}Newmark.txt","a")
 		file4.write(str(self.time)+' '+str(self.node.Newmark.Particles.position.value[1][2])+'\n')
 		file4.close()
 
-		file5 = open("/home/pasquale/EulerImplicit.txt","a")
+		file5 = open(f"{path}EulerImplicit.txt","a")
 		file5.write(str(self.time)+' '+str(self.node.EulerImplicit.Particles.position.value[1][2])+'\n')
 		file5.close()
 
-		file5 = open("/home/pasquale/Trapezoidal.txt","a")
+		file5 = open(f"{path}Trapezoidal.txt","a")
 		file5.write(str(self.time)+' '+str(self.node.Trapezoidal.Particles.position.value[1][2])+'\n')
 		file5.close()
 
@@ -100,6 +100,7 @@ def createScene(rootNode):
 	rootNode.addObject('RequiredPlugin', name="Sofa.Component.StateContainer")
 	rootNode.addObject('RequiredPlugin', name="Sofa.Component.Collision.Geometry")
 	rootNode.addObject('RequiredPlugin', name="Sofa.Component.ODESolver.Forward")
+	rootNode.addObject("RequiredPlugin", name="SofaViscoElastic")
 	rootNode.addObject('VisualStyle', displayFlags='hideVisualModels showBehaviorModels showCollisionModels hideBoundingCollisionModels hideForceFields hideInteractionForceFields hideWireframe')
 
 	rootNode.gravity=[ 0, 0, 9.81]

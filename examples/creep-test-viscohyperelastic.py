@@ -3,13 +3,11 @@ import SofaRuntime
 
 # to add elements like Node or objects
 import Sofa.Core
-root = Sofa.Core.Node()
-import math 
+import math
 import numpy as np
 from scipy import signal
 
-import os
-path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
+
 
 class CylinderController(Sofa.Core.Controller):
 
@@ -109,6 +107,7 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.Constraint.Lagrangian.Correction")
 	rootNode.addObject("RequiredPlugin", name = "Sofa.Component.Constraint.Projective")
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
+	rootNode.addObject("RequiredPlugin", name="SofaViscoElastic")
 
 
 	rootNode.gravity=[0,0,-9.81]
