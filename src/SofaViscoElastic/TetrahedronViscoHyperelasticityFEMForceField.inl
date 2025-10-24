@@ -61,7 +61,7 @@ using namespace sofa::SofaViscoElastic::material;
 
 
 template<class DataTypes>
-const helper::OptionsGroup materialOptions {
+const helper::OptionsGroup  viscoHyperelasticityMaterialOptions {
     SLSMooneyRivlinFirstOrder<DataTypes>::Name,
     SLSMooneyRivlinSecondOrder<DataTypes>::Name,
     SLSNeoHookeanFirstOrder<DataTypes>::Name,
@@ -78,7 +78,7 @@ template <class DataTypes> TetrahedronViscoHyperelasticityFEMForceField<DataType
     , m_initialPoints(0)
     , m_updateMatrix(true)
     , d_stiffnessMatrixRegularizationWeight(initData(&d_stiffnessMatrixRegularizationWeight, (bool)false,"matrixRegularization","Regularization of the Stiffness Matrix (between true or false)"))
-    , d_materialName(initData(&d_materialName, materialOptions<DataTypes>,"materialName","the name of the material to be used"))
+    , d_materialName(initData(&d_materialName, viscoHyperelasticityMaterialOptions<DataTypes>,"materialName","the name of the material to be used"))
     , d_parameterSet(initData(&d_parameterSet,"ParameterSet","The global parameters specifying the material"))
     , d_anisotropySet(initData(&d_anisotropySet,"AnisotropyDirections","The global directions of anisotropy of the material"))
     , m_tetrahedronInfo(initData(&m_tetrahedronInfo, "tetrahedronInfo", "Internal tetrahedron data"))
