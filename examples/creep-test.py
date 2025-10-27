@@ -1,18 +1,19 @@
 # to be able to add sofa objects you need to first load the plugins that implement them.
-# For simplicity you can load the plugin "SofaComponentAll" that will load all most
-# common sofa objects.
 import SofaRuntime
-SofaRuntime.importPlugin("SofaComponentAll")
 
 # to add elements like Node or objects
 import Sofa.Core
-root = Sofa.Core.Node()
-import math 
+import math
 import numpy as np
 from scipy import signal
 
-import os
-path = os.path.dirname(os.path.abspath(__file__))+'/plot/'
+# import os
+# path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'plot')
+# if not os.path.isdir(path):
+# 	if os.path.isfile(path):
+# 		raise ValueError(f"path {path} already exist and is a file")
+# 	else:
+# 		os.mkdir(path)
 
 class CylinderController(Sofa.Core.Controller):
 
@@ -57,7 +58,7 @@ class CylinderController(Sofa.Core.Controller):
 
 
 		print(epsilon*100)
-		#file1 = open(path + "SLS_Maxwell_cyclic1.txt","a")
+		#file1 = open(os.path.join(path,"SLS_Maxwell_cyclic1.txt"),"a")
 		#file1.write(str(self.time)+' '+str(self.node.cylinder.FEM.stressVonMisesElement.value[4])+' '+str(epsilon*100)+ '\n' )
 		#file1.close()
 
@@ -89,13 +90,14 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.Constraint.Lagrangian.Correction")
 	rootNode.addObject("RequiredPlugin", name = "Sofa.Component.Constraint.Projective")
 	rootNode.addObject("RequiredPlugin", name="Sofa.Component.ODESolver.Backward")
+	rootNode.addObject("RequiredPlugin", name="SofaViscoElastic")
 
 
 	rootNode.gravity=[0,9.810,0]
 	rootNode.dt = (1e6/(20e6*100))
 	rootNode.name = 'rootNode'
 	rootNode.addObject('DefaultAnimationLoop', computeBoundingBox="0")
-	rootNode.addObject('GenericConstraintSolver', tolerance=1e-24, maxIterations=1000)
+	rootNode.addObject('ProjectedGaussSeidelConstraintSolver', tolerance=1e-24, maxIterations=1000)
 	rootNode.addObject('OglSceneFrame', style='Arrows', alignment='TopRight')
 
 

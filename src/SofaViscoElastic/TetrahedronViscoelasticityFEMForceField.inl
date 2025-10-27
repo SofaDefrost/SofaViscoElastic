@@ -61,7 +61,7 @@ using namespace core::topology;
 using namespace sofa::SofaViscoElastic::material;
 
 template<class DataTypes>
-const helper::OptionsGroup materialOptions {
+const helper::OptionsGroup hyperelasticyMaterialOptions {
     MaxwellFirstOrder<DataTypes>::Name,
     SLSMaxwellFirstOrder<DataTypes>::Name,
     KelvinVoigtFirstOrder<DataTypes>::Name,
@@ -82,7 +82,7 @@ template <class DataTypes> TetrahedronViscoelasticityFEMForceField<DataTypes>::T
     , m_initialPoints(0)
     , m_updateMatrix(true)
     , d_stiffnessMatrixRegularizationWeight(initData(&d_stiffnessMatrixRegularizationWeight, (bool)false,"matrixRegularization","Regularization of the Stiffness Matrix (between true or false)"))
-    , d_materialName(initData(&d_materialName, materialOptions<DataTypes>,"materialName","the name of the material to be used"))
+    , d_materialName(initData(&d_materialName, hyperelasticyMaterialOptions<DataTypes>,"materialName","the name of the material to be used"))
     , d_parameterSet(initData(&d_parameterSet,"ParameterSet","The global parameters specifying the material"))
     , d_anisotropySet(initData(&d_anisotropySet,"AnisotropyDirections","The global directions of anisotropy of the material"))
     , m_tetrahedronInfo(initData(&m_tetrahedronInfo, "tetrahedronInfo", "Internal tetrahedron data"))
