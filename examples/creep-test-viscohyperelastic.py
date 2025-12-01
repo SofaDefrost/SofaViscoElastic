@@ -114,7 +114,7 @@ def createScene(rootNode):
 	rootNode.dt = (1e6/(10e6*100))
 	rootNode.name = 'rootNode'
 	rootNode.addObject('DefaultAnimationLoop', computeBoundingBox="0")
-	rootNode.addObject('ProjectedGaussSeidelConstraintSolver', tolerance=1e-24, maxIterations=100000000)
+	rootNode.addObject('BlockGaussSeidelConstraintSolver', tolerance=1e-24, maxIterations=100000000)
 	rootNode.addObject('OglSceneFrame', style='Arrows', alignment='TopRight')
 
 
