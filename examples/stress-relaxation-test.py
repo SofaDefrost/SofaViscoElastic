@@ -69,7 +69,7 @@ def createScene(rootNode):
 
 
 	rootNode.addObject('FreeMotionAnimationLoop')
-	rootNode.addObject('ProjectedGaussSeidelConstraintSolver', maxIterations=1e4, tolerance=1e-12)
+	rootNode.addObject('BlockGaussSeidelConstraintSolver', maxIterations=1e4, tolerance=1e-12)
 	rootNode.gravity = [0,0, -9.81]
 	rootNode.dt = (1e6/(20e6*100))
 

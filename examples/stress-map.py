@@ -77,7 +77,7 @@ def createScene(rootNode):
 	rootNode.addObject("RequiredPlugin", name="SofaViscoElastic")
 
 	rootNode.addObject('FreeMotionAnimationLoop')
-	rootNode.addObject('ProjectedGaussSeidelConstraintSolver', maxIterations=1e4, tolerance=1e-50)
+	rootNode.addObject('BlockGaussSeidelConstraintSolver', maxIterations=1e4, tolerance=1e-50)
 	rootNode.gravity = [0,0,-9.81]
 	rootNode.dt = (1e6/(20e6*100))
 
