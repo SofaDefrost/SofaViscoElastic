@@ -85,7 +85,7 @@ public:
         /// The algorithm consist into define for any model the strain that is acting on each dashpot present in the model, called Eviscous (Evisc in the code)
 
         sinfo->Evisc1 = (1 / (G0 + (G1 * tau1 / dt) + G1)) * (G0 * sinfo->E + (G1 * tau1 / dt) * sinfo->Evisc_prev1 - G0 * sinfo->Evisc_prev2);
-        sinfo->Evisc2 = (1 / (G0 + (G2 * tau2 / dt) + G1)) * (G0 * sinfo->E + (G2 * tau2 / dt) * sinfo->Evisc_prev2 - G0 * sinfo->Evisc_prev1);
+        sinfo->Evisc2 = (1 / (G0 + (G2 * tau2 / dt) + G2)) * (G0 * sinfo->E + (G2 * tau2 / dt) * sinfo->Evisc_prev2 - G0 * sinfo->Evisc_prev1);
         
 
         /// The equation of the Cauchy Stress tensor for the Maxwell Model.
