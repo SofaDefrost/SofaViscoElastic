@@ -87,8 +87,8 @@ public:
     virtual void applyElasticityTensor(StrainInformation<DataTypes> *sinfo, const MaterialParameters<DataTypes> &param,const MatrixSym& inputTensor, MatrixSym &outputTensor, SReal& t) override
      {
         Real G1 = param.parameterArray[0];
-        Real lambda = param.parameterArray[1];
-        Real tau = param.parameterArray[2];
+        Real tau = param.parameterArray[1];
+        Real lambda = param.parameterArray[2];
 
         MatrixSym ID;
         ID.identity();
