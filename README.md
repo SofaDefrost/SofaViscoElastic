@@ -17,7 +17,7 @@ Viscoelasticity is a property of elastomeric materials that influences their mec
 
 These two models represent the basic units that constitute viscoelastic materials. They are composed of an elastic part, represented by the spring symbol, and a viscous part, represented by the dashpot.
 The Maxwell and Kelvin-Voigt models describe the behavior of certain materials, such as silly putty and gels. Furthermore, they are unstable theoretical models under creep (Maxwell) or stress relaxation (Kelvin-Voigt) conditions. 
-Elastomers and rubbers are polymeric materials in nature but are also used in several industrial applications. Many research fields are involved in developing and using new elastomeric materials and rubbers, such as soft robotics and surgical applications. For this reason, this plugin is recommended for users who want a realistic mechanical simulation of these materials affected by viscoelasticity.
+Elastomers and rubbers are polymeric materials, but they are also used in several industrial applications. Many research fields are involved in developing and using new elastomeric materials and rubbers, such as soft robotics and surgical applications. For this reason, this plugin is recommended for users who want a realistic mechanical simulation of these materials affected by viscoelasticity.
 To describe their viscoelastic properties, different viscoelastic models have to be used, like the Standard Linear Solid (SLS) Maxwell/Kelvin-Voigt representation:
 
 ![SLS Models](./img/img2.png)
