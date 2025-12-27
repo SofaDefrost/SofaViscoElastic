@@ -22,7 +22,7 @@ To describe their viscoelastic properties, different viscoelastic models have to
 
 ![SLS Models](./img/img2.png)
 
-They add another spring in parallel (Maxwell representation) or in series (Kelvin-Voigt representation) to make the model stable under creep and stress relaxation. They are excellent for describing the rheology of viscoelastic polymers. The SofaViscoElastic plugin presents nine different viscoelastic models. For more theoretical information, users can refer to the paper "Considering the viscoelastic effects in soft robotic modeling" by Ferrentino et al., submitted to the Soft Robotic Journal (SORO). 
+They add another spring in parallel (Maxwell representation) or in series (Kelvin-Voigt representation) to make the model stable under creep and stress relaxation. They are excellent for describing the rheology of viscoelastic polymers. The SofaViscoElastic plugin presents nine different viscoelastic models. For more theoretical information, users can refer to the paper "Modeling and analyzing viscoelastic effects in soft actuators and robots" by Ferrentino et al., submitted to the Soft Robotic Journal (SORO). 
 
 ## Visco-Hyperelasticity
 The visco-hyperelastic model describes the mechanical behavior of the elastomers in large deformations. In this regime, the hyperelasticity of the material is shown in parallel to the viscous effects, in particular, for this plugin:
@@ -75,7 +75,7 @@ The additional fields to fill in are:
   - SLSOgdenSecondOrder
   - SLSStableNeoHookeanFirstOrder
   - SLSStableNeoHookeanSecondOrder
-* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Young Moduli ($E_i$) and the relaxation times ($&tau;_i$) defined as the ratio between the viscosity ($&eta;_i$) and the relative Young modulus. Ultimately, the user must specify the Poisson Ratio (&nu;).
+* ParameterSet: the lists of the material constants proper of the viscoelastic model chosen by the user. In particular, the user has to define the Shear Moduli ($G_i$) and the relaxation times ($&tau;_i$) defined as the ratio between the viscosity ($&eta;_i$) and the relative shear modulus. Ultimately, the user must specify the Bulk modulus (K).
 
 
 For the simulation, it is strictly recommended to set the Rayleigh coefficient of the Solver to 0:
@@ -118,7 +118,8 @@ The terms with the exponent "n" refer to the quantity calculated at the current 
 Instead, the hydrostatic part of the stress tensor is calculated using this general formula:
 
 ![Hydrostatic part of the stresses](./img/equation3.PNG)
- It uses the material's bulk Modulus (K).
+
+It uses the material's bulk Modulus (K).
 ## Future works
 The Mullin effects on the Hysteresis modeling/parametrization will be added. Stay updated!
 
