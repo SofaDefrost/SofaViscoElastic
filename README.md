@@ -48,14 +48,14 @@ Then recompile SOFA, and it should start its installation. Enjoy!
 If you have any problems, please contact the author at pasquale.ferrentino@vub.be.
 
 ## Python Functions and Bindings
-The principal function of this plugin is the so-called TethrahedronViscoelasticityFEMForceField, which applies the viscoelastic constitutive law to the tetrahedral mesh uploaded in SOFA, the syntax in Python is the following :
+The principal function of this plugin is the so-called TethrahedronViscoelasticityFEMForceField, which applies the viscoelastic constitutive law to the tetrahedral mesh uploaded in SOFA. The syntax in Python is the following :
 
 ![Python function](./img/img3.png)
 
 The additional fields to fill in are:
 * template: related to the DOF expressed in the Mechanical Object in SOFA.
 * name: The name chosen by the user for the function (will appear in the SOFA simulation Graph)
-* materialname: The name of the viscoelastic model that the user wants to use, he can choose between:
+* materialname: The name of the viscoelastic model that the user wants to use; he can choose between:
   (Linear Viscoelasticity)
   - MaxwellFirstOrder
   - KelvinVoigtFirstOrder
@@ -117,8 +117,8 @@ Applying the discretization of this equation, in particular an Euler backward sc
 The terms with the exponent "n" refer to the quantity calculated at the current time step, while the ones with the exponent "n-1" refer to the quantity calculated at the previous time step. Hence, in viscoelastic materials, the current strain-stress state depends on the previous strain-stress conditions, meaning that the material has "memory" of its last internal stress/strain state.  
 Instead, the hydrostatic part of the stress tensor is calculated using this general formula:
 
-![Fourth order elasticity tensor](./img/equation3.PNG)
- 
+![Hydrostatic part of the stresses](./img/equation3.PNG)
+ It uses the material's bulk Modulus (K).
 ## Future works
 The Mullin effects on the Hysteresis modeling/parametrization will be added. Stay updated!
 
@@ -126,4 +126,4 @@ The Mullin effects on the Hysteresis modeling/parametrization will be added. Sta
  The plugin generates various example scenes in Python 3. The examples show a cylindrical beam using viscoelastic constitutive models and undergoing a creep test and a stress-relaxation test. 
  The plugin was developed in collaboration between the Brubotics lab at the VUB (Vrije Universiteit Brussel) and the DEFROST team at the INRIA Institute in Lille. 
  The authors of this plugin are looking for future collaborations for further development.
- For other info please contact: pasquale.ferrentino@vub.be.
+ For other info, please contact: pasquale.ferrentino@vub.be.
