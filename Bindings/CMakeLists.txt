@@ -29,7 +29,7 @@ endif()
 
 SP3_add_python_module(
     TARGET       ${PROJECT_NAME}
-    PACKAGE      Bindings
+    PACKAGE      SofaViscoElastic
     MODULE       SofaViscoElastic
     DESTINATION  .
     SOURCES      ${SOURCE_FILES}
