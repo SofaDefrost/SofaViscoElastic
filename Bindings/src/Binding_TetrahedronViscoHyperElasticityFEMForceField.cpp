@@ -34,7 +34,6 @@
 
 #include <SofaPython3/Sofa/Core/Binding_Base.h>
 #include <SofaPython3/PythonFactory.h>
-#include <SofaPython3/Sofa/Core/Binding_BaseObject.h>
 #include <Binding_TetrahedronViscoHyperElasticityFEMForceField.h>
 #include <SofaViscoElastic/TetrahedronViscoHyperelasticityFEMForceField.h>
 
